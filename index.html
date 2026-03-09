@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thomas Talas</title>
+  <meta name="description" content="Thomas Talas — software developer, automation builder, full-stack engineer." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- Ambient glow orbs -->
+  <div class="ambient">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="orb orb-5"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-logo">thomas<span class="accent">.</span></a>
+      <ul class="nav-links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#projects">Work</a></li>
+        <li><a href="#skills">Stack</a></li>
+        <li><a href="#music">Vibes</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#projects">Work</a></li>
+      <li><a href="#skills">Stack</a></li>
+      <li><a href="#music">Vibes</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="container hero-content">
+      <div class="hero-status reveal">
+        <span class="status-dot"></span>
+        Available for work
+      </div>
+      <h1 class="hero-title reveal">
+        <span class="hero-line">Thomas Talas</span>
+        <span class="hero-typed-wrap">
+          I build <span class="typed-text" id="typedText"></span><span class="typed-cursor">|</span>
+        </span>
+      </h1>
+      <p class="hero-subtitle reveal">
+        Software developer in Ontario. I like building things that automate boring work, ship real products, and actually get used by people.
+      </p>
+      <div class="hero-actions reveal">
+        <a href="#projects" class="btn btn-primary">
+          <span>See my work</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+        <a href="#contact" class="btn btn-ghost">Get in touch</a>
+      </div>
+      <div class="hero-marquee reveal">
+        <div class="marquee-track">
+          <span>React</span><span>Next.js</span><span>Node.js</span><span>TypeScript</span><span>Python</span><span>OpenAI</span><span>n8n</span><span>Supabase</span><span>MongoDB</span><span>Docker</span><span>Lua</span><span>C++</span>
+          <span>React</span><span>Next.js</span><span>Node.js</span><span>TypeScript</span><span>Python</span><span>OpenAI</span><span>n8n</span><span>Supabase</span><span>MongoDB</span><span>Docker</span><span>Lua</span><span>C++</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="section" id="about">
+    <div class="container">
+      <div class="section-eyebrow reveal">// about</div>
+      <div class="about-grid">
+        <div class="about-text">
+          <h2 class="section-title reveal">
+            I'm a developer who cares about<br/><span class="accent">what actually ships.</span>
+          </h2>
+          <p class="reveal">
+            I'm finishing up an Honours BTech in Software Development at Seneca Polytechnic. Most of my time goes into building full-stack apps, AI automation systems, and tools that replace manual work for real businesses.
+          </p>
+          <p class="reveal">
+            Right now I'm working at Job Buddy, building a platform that helps construction companies manage their entire workflow. Before that I was at T4R.org automating ad operations and vendor management.
+          </p>
+          <p class="reveal">
+            I also build stuff on the side. I've shipped a Roblox game, built client websites, and I'm always working on something new.
+          </p>
+        </div>
+        <div class="about-cards reveal">
+          <div class="info-card">
+            <div class="info-card-label">Location</div>
+            <div class="info-card-value">Richmond Hill, ON</div>
+          </div>
+          <div class="info-card">
+            <div class="info-card-label">Currently</div>
+            <div class="info-card-value">Software Dev @ Job Buddy</div>
+          </div>
+          <div class="info-card">
+            <div class="info-card-label">Education</div>
+            <div class="info-card-value">Seneca Polytechnic, BTech</div>
+          </div>
+          <div class="info-card">
+            <div class="info-card-label">Languages</div>
+            <div class="info-card-value">English, French, Russian</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience -->
+  <section class="section section-dark" id="experience">
+    <div class="container">
+      <div class="section-eyebrow reveal">// experience</div>
+      <h2 class="section-title reveal">Where I've worked</h2>
+
+      <div class="exp-list">
+        <div class="exp-item reveal">
+          <div class="exp-left">
+            <span class="exp-date">2025 - Now</span>
+          </div>
+          <div class="exp-right">
+            <div class="exp-header">
+              <h3>Software Developer</h3>
+              <span class="exp-company">Job Buddy (Joda Development)</span>
+            </div>
+            <ul class="exp-bullets">
+              <li>Building full-stack features for a platform that construction companies use daily to manage quotes, invoices, and project workflows</li>
+              <li>Set up automation systems with n8n and Gumloop that cut down hours of manual work</li>
+              <li>Plugged in LLM APIs to auto-generate job summaries, process documents, and handle internal workflows</li>
+              <li>Designed the backend APIs and database schemas for client and project data</li>
+              <li>Built internal dashboards that contractors actually use to manage their jobs</li>
+            </ul>
+            <div class="tag-row">
+              <span>Full-Stack</span><span>AI/LLM</span><span>n8n</span><span>Gumloop</span><span>API Design</span><span>Supabase</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="exp-item reveal">
+          <div class="exp-left">
+            <span class="exp-date">Apr 2022 - Now</span>
+          </div>
+          <div class="exp-right">
+            <div class="exp-header">
+              <h3>Sales & Platform Operations</h3>
+              <span class="exp-company">T4R.org</span>
+            </div>
+            <ul class="exp-bullets">
+              <li>Built scripts and automation tools to process ad requests and vendor data</li>
+              <li>Set up AI workflows to summarize vendor messages and categorize incoming leads</li>
+              <li>Automated reporting pipelines using APIs and workflow tools</li>
+              <li>Ran digital ad campaigns through Google Ad Manager</li>
+            </ul>
+            <div class="tag-row">
+              <span>Automation</span><span>AI Workflows</span><span>APIs</span><span>Google Ad Manager</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="edu-block reveal">
+        <div class="section-eyebrow">// education</div>
+        <div class="edu-card">
+          <div class="edu-main">
+            <h3>Honours Bachelor of Technology</h3>
+            <span class="edu-school">Seneca Polytechnic / Software Development</span>
+          </div>
+          <span class="exp-date">Graduating 2028</span>
+          <div class="tag-row" style="margin-top: 16px;">
+            <span>Software Architecture</span><span>OOP</span><span>Databases</span><span>Algorithms</span><span>Systems Design</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section class="section" id="projects">
+    <div class="container">
+      <div class="section-eyebrow reveal">// work</div>
+      <h2 class="section-title reveal">Things I've built</h2>
+
+      <!-- Featured project -->
+      <div class="project-featured reveal">
+        <div class="project-featured-content">
+          <span class="project-label">Featured Project</span>
+          <h3>AI Workflow Automation System</h3>
+          <p>Built end-to-end automation pipelines that connect business tools, APIs, and AI models. These workflows handle things like auto-classifying data, generating summaries, and triggering actions across multiple services. Replaced hours of manual processing with systems that run on their own.</p>
+          <div class="tag-row">
+            <span>n8n</span><span>Gumloop</span><span>OpenAI API</span><span>REST APIs</span><span>Event-Driven</span>
+          </div>
+        </div>
+        <div class="project-featured-visual">
+          <div class="code-window">
+            <div class="code-dots"><span></span><span></span><span></span></div>
+            <pre><code><span class="code-kw">const</span> pipeline = <span class="code-fn">createWorkflow</span>({
+  <span class="code-key">trigger</span>: <span class="code-str">"webhook"</span>,
+  <span class="code-key">steps</span>: [
+    classify(<span class="code-str">"incoming_data"</span>),
+    summarize({ <span class="code-key">model</span>: <span class="code-str">"gpt-4"</span> }),
+    route(<span class="code-str">"by_priority"</span>),
+    notify(<span class="code-str">"slack"</span>)
+  ]
+});</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project grid -->
+      <div class="projects-grid">
+
+        <article class="project-card reveal">
+          <div class="project-card-glow"></div>
+          <div class="project-card-content">
+            <div class="project-card-top">
+              <span class="project-card-num">01</span>
+              <div class="project-card-links">
+                <span class="project-type">AI / Node.js</span>
+              </div>
+            </div>
+            <h3>AI Customer Support Bot</h3>
+            <p>Built an AI chatbot with Node.js and OpenAI that handles ticket classification, generates responses, and knows when to escalate to a human. Connected it to internal knowledge bases so it actually gives useful answers.</p>
+            <div class="tag-row">
+              <span>Node.js</span><span>OpenAI</span><span>NLP</span><span>Chatbot</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-card-glow"></div>
+          <div class="project-card-content">
+            <div class="project-card-top">
+              <span class="project-card-num">02</span>
+              <div class="project-card-links">
+                <span class="project-type">Game Dev / Lua</span>
+              </div>
+            </div>
+            <h3>Spin Streamer</h3>
+            <p>A multiplayer Roblox game I built with another developer. We used Rojo to sync Roblox Studio with VS Code and GitHub so we could actually work like real engineers. Has progression systems, reward mechanics, and a full custom UI.</p>
+            <div class="tag-row">
+              <span>Lua</span><span>Roblox Studio</span><span>Rojo</span><span>GitHub</span><span>Multiplayer</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-card-glow"></div>
+          <div class="project-card-content">
+            <div class="project-card-top">
+              <span class="project-card-num">03</span>
+              <div class="project-card-links">
+                <span class="project-type">Client Work / Web</span>
+              </div>
+            </div>
+            <h3>kimvu.design</h3>
+            <p>Designed and shipped a production website for an interior designer. Worked directly with the client through multiple design iterations. Fully responsive with custom layouts, asset integration, and clean navigation.</p>
+            <div class="tag-row">
+              <span>HTML/CSS</span><span>JavaScript</span><span>Responsive</span><span>Design</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-card-glow"></div>
+          <div class="project-card-content">
+            <div class="project-card-top">
+              <span class="project-card-num">04</span>
+              <div class="project-card-links">
+                <span class="project-type">Full-Stack / SaaS</span>
+              </div>
+            </div>
+            <h3>Job Buddy Platform</h3>
+            <p>The main product I work on. A full business management platform for construction companies. Handles quoting, invoicing, scheduling, and client communication. I built core features across the entire stack.</p>
+            <div class="tag-row">
+              <span>React</span><span>Node.js</span><span>Supabase</span><span>n8n</span><span>Vercel</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-card-glow"></div>
+          <div class="project-card-content">
+            <div class="project-card-top">
+              <span class="project-card-num">05</span>
+              <div class="project-card-links">
+                <span class="project-type">Automation / Ops</span>
+              </div>
+            </div>
+            <h3>T4R Ad Operations Tools</h3>
+            <p>Internal tooling I built to automate the ad operations workflow at T4R.org. Scripts that process vendor data, categorize leads with AI, and generate reports automatically instead of doing it by hand.</p>
+            <div class="tag-row">
+              <span>Python</span><span>APIs</span><span>AI</span><span>Google Ad Manager</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card reveal">
+          <div class="project-card-glow"></div>
+          <div class="project-card-content">
+            <div class="project-card-top">
+              <span class="project-card-num">06</span>
+              <div class="project-card-links">
+                <span class="project-type">Personal / Web</span>
+              </div>
+            </div>
+            <h3>This Portfolio</h3>
+            <p>You're looking at it. Hand-coded with vanilla HTML, CSS, and JS. Particle canvas background, custom typing animation, scroll reveals, 3D card tilts, and a tech marquee. No frameworks, no templates.</p>
+            <div class="tag-row">
+              <span>HTML</span><span>CSS</span><span>JavaScript</span><span>Canvas</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills -->
+  <section class="section section-dark" id="skills">
+    <div class="container">
+      <div class="section-eyebrow reveal">// stack</div>
+      <h2 class="section-title reveal">What I work with</h2>
+      <div class="skills-grid">
+
+        <div class="skill-group reveal">
+          <h3>Languages</h3>
+          <div class="skill-items">
+            <div class="skill-chip">C++</div>
+            <div class="skill-chip">Python</div>
+            <div class="skill-chip">JavaScript</div>
+            <div class="skill-chip">TypeScript</div>
+            <div class="skill-chip">SQL</div>
+            <div class="skill-chip">Lua</div>
+            <div class="skill-chip">HTML</div>
+            <div class="skill-chip">CSS</div>
+          </div>
+        </div>
+
+        <div class="skill-group reveal">
+          <h3>Frameworks & Tools</h3>
+          <div class="skill-items">
+            <div class="skill-chip">Node.js</div>
+            <div class="skill-chip">Express</div>
+            <div class="skill-chip">React</div>
+            <div class="skill-chip">Next.js</div>
+            <div class="skill-chip">REST APIs</div>
+            <div class="skill-chip">Supabase</div>
+            <div class="skill-chip">MongoDB</div>
+          </div>
+        </div>
+
+        <div class="skill-group reveal">
+          <h3>AI & Automation</h3>
+          <div class="skill-items">
+            <div class="skill-chip">OpenAI API</div>
+            <div class="skill-chip">LLM Integrations</div>
+            <div class="skill-chip">AI Pipelines</div>
+            <div class="skill-chip">n8n</div>
+            <div class="skill-chip">Gumloop</div>
+            <div class="skill-chip">Chatbots</div>
+            <div class="skill-chip">Prompt Engineering</div>
+          </div>
+        </div>
+
+        <div class="skill-group reveal">
+          <h3>DevOps & Platforms</h3>
+          <div class="skill-items">
+            <div class="skill-chip">Git</div>
+            <div class="skill-chip">GitHub</div>
+            <div class="skill-chip">Docker</div>
+            <div class="skill-chip">Linux</div>
+            <div class="skill-chip">Postman</div>
+            <div class="skill-chip">Vercel</div>
+            <div class="skill-chip">Roblox Studio</div>
+            <div class="skill-chip">Rojo</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Music -->
+  <section class="section" id="music">
+    <div class="container">
+      <div class="section-eyebrow reveal">// vibes</div>
+      <h2 class="section-title reveal">What I listen to</h2>
+      <p class="music-sub reveal">I code better with music on. Here's what's been on repeat.</p>
+
+      <div class="music-layout">
+        <div class="spotify-embed reveal">
+          <iframe
+            style="border-radius:12px"
+            src="https://open.spotify.com/embed/playlist/3Y6TL1M5C7uhcGPftGBQvn?utm_source=generator&theme=0"
+            width="100%"
+            height="460"
+            frameBorder="0"
+            allowfullscreen=""
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          ></iframe>
+        </div>
+
+        <div class="music-cards reveal">
+          <div class="music-note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <span>Music keeps me locked in during long coding sessions. Lots of J. Cole, Kendrick, Mac Miller, and old school hip-hop.</span>
+          </div>
+          <div class="genre-tags">
+            <span class="genre-chip">Hip-Hop</span>
+            <span class="genre-chip">Rap</span>
+            <span class="genre-chip">Conscious Rap</span>
+            <span class="genre-chip">Old School</span>
+            <span class="genre-chip">Boom Bap</span>
+            <span class="genre-chip">West Coast</span>
+          </div>
+          <div class="music-eq">
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="section" id="contact">
+    <div class="container contact-wrap">
+      <div class="section-eyebrow reveal">// contact</div>
+      <h2 class="contact-title reveal">Let's talk<span class="accent">.</span></h2>
+      <p class="contact-sub reveal">
+        Got a project, job opportunity, or just want to chat? I'm always down to connect.
+      </p>
+      <div class="contact-grid reveal">
+        <a href="mailto:thomas@talas.ca" class="contact-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          <div>
+            <div class="contact-item-label">Email</div>
+            <div class="contact-item-value">thomas@talas.ca</div>
+          </div>
+        </a>
+        <a href="tel:+16479163269" class="contact-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <div>
+            <div class="contact-item-label">Phone</div>
+            <div class="contact-item-value">647-916-3269</div>
+          </div>
+        </a>
+        <a href="https://www.linkedin.com/in/thomas-talas-699518229/" target="_blank" rel="noopener noreferrer" class="contact-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          <div>
+            <div class="contact-item-label">LinkedIn</div>
+            <div class="contact-item-value">Thomas Talas</div>
+          </div>
+        </a>
+      </div>
+      <a href="mailto:thomas@talas.ca" class="btn btn-primary btn-lg reveal">
+        <span>Say hello</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="footer-name">Thomas Talas</span>
+      <span class="footer-copy">&copy; 2026</span>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
