@@ -380,10 +380,13 @@ body::before {
   line-height: 1.05;
   letter-spacing: -0.04em;
   margin-bottom: 24px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .hero-line {
   display: block;
+  max-width: 100%;
 }
 
 .hero-typed-wrap {
@@ -1254,7 +1257,11 @@ body::before {
   .container { padding: 0 16px; }
   .nav-inner { padding: 0 16px; }
   .section { padding: 64px 0; }
-  .hero-title { font-size: 2.6rem; }
+  .hero-title {
+    font-size: 2.45rem;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
   .hero-content { padding: 72px 0 44px; }
   .hero-subtitle { font-size: 0.95rem; }
   .hero-status { margin-bottom: 20px; }
@@ -1274,7 +1281,10 @@ body::before {
 }
 
 @media (max-width: 360px) {
-  .hero-title { font-size: 2.2rem; }
+  .hero-title {
+    font-size: 2.1rem;
+    letter-spacing: -0.01em;
+  }
   .hero-typed-wrap { font-size: 0.95rem; }
   .section-title { font-size: 1.6rem; }
   .project-card-content,
