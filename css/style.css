@@ -37,6 +37,7 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px;
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -45,7 +46,11 @@ body {
   color: var(--text);
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+  html, body { overflow-x: hidden; }
 }
 
 body::after {
@@ -550,6 +555,7 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-x: clip;
 }
 
 .info-card {
@@ -564,6 +570,12 @@ body::before {
   border-color: var(--border-hover);
   transform: translateX(4px);
   background: var(--surface-hover);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .info-card:hover {
+    transform: none;
+  }
 }
 
 .info-card-label {
