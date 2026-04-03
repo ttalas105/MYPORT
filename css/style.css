@@ -387,6 +387,7 @@ body::before {
 .hero-line {
   display: block;
   max-width: 100%;
+  padding-right: 0.08em;
 }
 
 .hero-typed-wrap {
