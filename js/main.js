@@ -6,11 +6,13 @@
   // ========================================
   const canvas = document.getElementById("particleCanvas");
   const ctx = canvas.getContext("2d");
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let particles = [];
   let mouse = { x: -1000, y: -1000 };
-  const PARTICLE_COUNT = 80;
-  const CONNECT_DIST = 140;
-  const MOUSE_DIST = 200;
+  const PARTICLE_COUNT = prefersReducedMotion ? 0 : (isMobile ? 34 : 80);
+  const CONNECT_DIST = isMobile ? 100 : 140;
+  const MOUSE_DIST = isMobile ? 120 : 200;
 
   function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -31,6 +33,7 @@
   }
 
   function drawParticles() {
+    if (PARTICLE_COUNT === 0) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < particles.length; i++) {
@@ -107,6 +110,11 @@
     mouse.x = e.clientX;
     mouse.y = e.clientY;
   });
+  document.addEventListener("touchmove", (e) => {
+    if (!e.touches || e.touches.length === 0) return;
+    mouse.x = e.touches[0].clientX;
+    mouse.y = e.touches[0].clientY;
+  }, { passive: true });
 
   resizeCanvas();
   createParticles();
@@ -206,8 +214,6 @@
   // Scroll reveal
   // ========================================
   const revealEls = document.querySelectorAll(".reveal");
-  let revealDelay = 0;
-
   const revealObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -274,21 +280,23 @@
   // ========================================
   // Project card glow follow
   // ========================================
-  document.querySelectorAll(".project-card").forEach((card) => {
-    card.addEventListener("mousemove", (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty("--mouse-x", x + "px");
-      card.style.setProperty("--mouse-y", y + "px");
+  if (!isMobile) {
+    document.querySelectorAll(".project-card").forEach((card) => {
+      card.addEventListener("mousemove", (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty("--mouse-x", x + "px");
+        card.style.setProperty("--mouse-y", y + "px");
+      });
     });
-  });
+  }
 
   // ========================================
   // 3D tilt on featured project
   // ========================================
   const featured = document.querySelector(".project-featured");
-  if (featured) {
+  if (featured && !isMobile) {
     featured.addEventListener("mousemove", (e) => {
       const rect = featured.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width - 0.5;
