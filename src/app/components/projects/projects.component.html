@@ -1,0 +1,28 @@
+<section id="projects">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="kicker">Featured Projects</p>
+        <h2>Things I can talk about.</h2>
+      </div>
+      <a href="https://github.com/ThomasTalas" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">&nearr;</span></a>
+    </div>
+    <div class="grid">
+      @for (p of projects; track p.name) {
+        <article>
+          @if (p.url) {
+            <a [href]="p.url" target="_blank" rel="noopener noreferrer" class="project-name">{{ p.name }} <span aria-hidden="true">&nearr;</span></a>
+          } @else {
+            <h3 class="project-name">{{ p.name }}</h3>
+          }
+          <p class="project-desc">{{ p.description }}</p>
+          <div class="tags">
+            @for (tag of p.tags; track tag) {
+              <span class="tag">{{ tag }}</span>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+</section>
