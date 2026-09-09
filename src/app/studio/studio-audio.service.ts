@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
-import { StudioAudio, type StudioAudioState } from './studio-audio';
+import { StudioAudio, STUDIO_MUSIC_DEFAULT_VOLUME, type StudioAudioState } from './studio-audio';
 import { STUDIO_SOUNDTRACK } from './studio-soundtrack';
 
 /** Page-scoped playback, preferences and browser lifecycle; no view or camera ownership. */
@@ -42,7 +42,7 @@ export class StudioAudioService implements OnDestroy {
   }
 
   setVolume(value: number): void {
-    const volume = Math.round(Math.max(0, Math.min(100, Number.isFinite(value) ? value : 35)));
+    const volume = Math.round(Math.max(0, Math.min(100, Number.isFinite(value) ? value : STUDIO_MUSIC_DEFAULT_VOLUME)));
     this.volumeState.set(volume);
     this.save('studio-music-volume', String(volume));
     this.engine.setVolume(volume);
@@ -79,9 +79,9 @@ export class StudioAudioService implements OnDestroy {
   private readVolume(): number {
     try {
       const stored = this.document.defaultView?.localStorage.getItem('studio-music-volume');
-      const volume = stored == null ? 35 : Number(stored);
-      return Number.isFinite(volume) ? Math.round(Math.max(0, Math.min(100, volume))) : 35;
-    } catch { return 35; }
+      const volume = stored == null ? STUDIO_MUSIC_DEFAULT_VOLUME : Number(stored);
+      return Number.isFinite(volume) ? Math.round(Math.max(0, Math.min(100, volume))) : STUDIO_MUSIC_DEFAULT_VOLUME;
+    } catch { return STUDIO_MUSIC_DEFAULT_VOLUME; }
   }
 
   private save(key: string, value: string): void {

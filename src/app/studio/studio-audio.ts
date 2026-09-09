@@ -1,14 +1,15 @@
 export type StudioAudioState = 'waiting' | 'loading' | 'playing' | 'off' | 'unavailable';
 
-// Keep the soundtrack quietly in the background at every saved slider setting (-22 dB).
-export const STUDIO_MUSIC_OUTPUT_GAIN = .08;
+// Raise the previous output level by 10 dB (about -12 dB relative to the source).
+export const STUDIO_MUSIC_OUTPUT_GAIN = .08 * 10 ** (10 / 20);
+export const STUDIO_MUSIC_DEFAULT_VOLUME = 50;
 
 function unit(value: number): number {
   return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
 }
 
 function volumePercent(value: number): number {
-  return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : 35;
+  return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : STUDIO_MUSIC_DEFAULT_VOLUME;
 }
 
 function smooth(value: number): number {
@@ -47,13 +48,13 @@ export class StudioAudio {
   private mediaPlaying = false;
   private playPending = false;
   private openness = 0;
-  private volume = 35;
+  private volume = STUDIO_MUSIC_DEFAULT_VOLUME;
   private readonly initialOffsetSeconds: number;
   private initialPositionApplied = false;
   private attempt = 0;
   private pauseTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(source: string, private readonly onState: (state: StudioAudioState) => void, initialEnabled = true, initialVolume = 35, startAtSeconds = 0, preloadedMedia?: HTMLAudioElement) {
+  constructor(source: string, private readonly onState: (state: StudioAudioState) => void, initialEnabled = true, initialVolume = STUDIO_MUSIC_DEFAULT_VOLUME, startAtSeconds = 0, preloadedMedia?: HTMLAudioElement) {
     this.enabled = initialEnabled;
     this.volume = volumePercent(initialVolume);
     this.initialOffsetSeconds = Number.isFinite(startAtSeconds) ? Math.max(0, startAtSeconds) : 0;

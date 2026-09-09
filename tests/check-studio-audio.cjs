@@ -139,6 +139,17 @@ async function running(h) {
 }
 
 const checks = {
+  'output rises by 10 dB and the engine defaults to 50 percent': () => {
+    const h = harness();
+    near(20 * Math.log10(h.STUDIO_MUSIC_OUTPUT_GAIN / .08), 10);
+    assert.equal(h.STUDIO_MUSIC_DEFAULT_VOLUME, 50);
+    const engine = new h.StudioAudio('/music.mp3', () => {});
+    const master = h.contexts[0].nodes[4];
+    near(master.gain.value, .4 * (.08 * Math.sqrt(10)));
+    engine.setOpenness(1);
+    near(master.gain.value, .5 * (.08 * Math.sqrt(10)));
+    engine.dispose();
+  },
   'acoustics are bounded, monotonic, and bypass the filter inside': async () => {
     const h = harness();
     assert.equal(h.studioOpenness(5.4), 0);
@@ -173,12 +184,12 @@ const checks = {
     assert.equal(filter.frequency.value, 320);
     assert.equal(wet.gain.value, 1);
     assert.equal(dry.gain.value, 0);
-    near(master.gain.value, .28 * .08);
+    near(master.gain.value, .28 * (.08 * Math.sqrt(10)));
     engine.setOpenness(1);
     assert.equal(filter.frequency.value, 18000);
     assert.equal(wet.gain.value, 0);
     assert.equal(dry.gain.value, 1);
-    assert.equal(master.gain.value, .35 * .08);
+    assert.equal(master.gain.value, .35 * (.08 * Math.sqrt(10)));
     assert.equal(master.gain.ramps.at(-1).time, 1.08);
     engine.dispose();
   },
@@ -301,30 +312,30 @@ const checks = {
   'user volume is clamped, retained through mute and visibility, and independent of room attenuation': async () => {
     const h = harness(), engine = h.create('/music.mp3', true, 62), context = h.contexts[0];
     const master = context.nodes[4];
-    near(master.gain.value, .8 * .62 * .08);
+    near(master.gain.value, .8 * .62 * (.08 * Math.sqrt(10)));
     context.run(); h.media[0].begin(); await flush();
     engine.setOpenness(1);
-    assert.equal(master.gain.value, .62 * .08);
+    assert.equal(master.gain.value, .62 * (.08 * Math.sqrt(10)));
     engine.setVolume(25);
-    assert.equal(master.gain.value, .25 * .08);
+    assert.equal(master.gain.value, .25 * (.08 * Math.sqrt(10)));
     engine.setEnabled(false);
     engine.setVolume(75);
     assert.equal(master.gain.value, 0);
     engine.setEnabled(true);
-    assert.equal(master.gain.value, .75 * .08);
+    assert.equal(master.gain.value, .75 * (.08 * Math.sqrt(10)));
     engine.setHidden(true);
     engine.setVolume(40);
     assert.equal(master.gain.value, 0);
     engine.setHidden(false);
-    assert.equal(master.gain.value, .4 * .08);
+    assert.equal(master.gain.value, .4 * (.08 * Math.sqrt(10)));
     engine.setVolume(-10);
     assert.equal(master.gain.value, 0);
     engine.setVolume(140);
-    assert.equal(master.gain.value, .08);
+    assert.equal(master.gain.value, .08 * Math.sqrt(10));
     engine.setVolume(NaN);
-    assert.equal(master.gain.value, .35 * .08);
+    assert.equal(master.gain.value, .5 * (.08 * Math.sqrt(10)));
     engine.setOpenness(0);
-    near(master.gain.value, .28 * .08);
+    near(master.gain.value, .4 * (.08 * Math.sqrt(10)));
     engine.dispose();
     const ramps = master.gain.ramps.length;
     engine.setVolume(90);
@@ -333,7 +344,7 @@ const checks = {
     mutedEngine.setVolume(70);
     assert.equal(muted.media[0].plays.length, 0);
     mutedEngine.setEnabled(true);
-    near(muted.contexts[0].nodes[4].gain.value, .56 * .08);
+    near(muted.contexts[0].nodes[4].gain.value, .56 * (.08 * Math.sqrt(10)));
     mutedEngine.dispose();
   },
   'blocked autoplay retries synchronously on a gesture and reports actual playing': async () => {
@@ -383,7 +394,7 @@ const checks = {
     assert.equal(master.gain.value, 0);
     assert.equal(h.state(), 'off');
     engine.setEnabled(true);
-    near(master.gain.value, .28 * .08);
+    near(master.gain.value, .28 * (.08 * Math.sqrt(10)));
     assert.equal(media.plays.length, playCalls);
     assert.equal(h.timers.size, 0);
     h.flushTimers();

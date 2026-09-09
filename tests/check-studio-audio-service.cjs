@@ -58,7 +58,7 @@ function harness({ stored = {}, hidden = false, storageFails = false, hasWindow 
         inject(token) { assert.equal(token, DOCUMENT); return document; },
         signal,
       };
-      if (name === './studio-audio') return { StudioAudio: FakeStudioAudio };
+      if (name === './studio-audio') return { StudioAudio: FakeStudioAudio, STUDIO_MUSIC_DEFAULT_VOLUME: 50 };
       if (name === './studio-soundtrack') return { STUDIO_SOUNDTRACK: { file: '/fixture.m4a', startAtSeconds: 7.2 } };
       throw new Error(`Unexpected import: ${name}`);
     },
@@ -101,7 +101,7 @@ check('saved mute and volume initialize the engine before any interaction', () =
 check('the first ordinary trusted interaction retries without requiring Music', () => {
   const h = harness();
   assert.equal(h.service.enabled(), true);
-  assert.equal(h.engine.volume, 35);
+  assert.equal(h.engine.volume, 50);
   h.emit('pointerdown');
   assert.equal(h.engine.unlocks, 1, 'Retry occurs synchronously in the gesture handler');
   h.emit('click');
@@ -113,13 +113,13 @@ check('the first ordinary trusted interaction retries without requiring Music', 
 });
 
 check('volume is bounded, rounded and persisted; playback and room state stay observable', () => {
-  for (const [stored, expected] of [['bad', 35], ['Infinity', 35], ['-4', 0], ['203', 100], ['42.7', 43]]) {
+  for (const [stored, expected] of [['bad', 50], ['Infinity', 50], ['-4', 0], ['203', 100], ['42.7', 43]]) {
     const h = harness({ stored: { 'studio-music-volume': stored } });
     assert.equal(h.service.volume(), expected);
     assert.equal(h.engine.volume, expected);
   }
   const h = harness();
-  for (const [value, expected] of [[-1, 0], [150, 100], [42.7, 43], [NaN, 35], [Infinity, 35]]) {
+  for (const [value, expected] of [[-1, 0], [150, 100], [42.7, 43], [NaN, 50], [Infinity, 50]]) {
     h.service.setVolume(value);
     assert.equal(h.service.volume(), expected);
     assert.equal(h.engine.volume, expected);
@@ -139,7 +139,7 @@ check('blocked or absent storage still allows preferences for this visit', () =>
   for (const options of [{ storageFails: true }, { hasWindow: false }]) {
     const h = harness(options);
     assert.equal(h.service.enabled(), true);
-    assert.equal(h.service.volume(), 35);
+    assert.equal(h.service.volume(), 50);
     h.service.setEnabled(false);
     h.service.setVolume(17);
     assert.equal(h.service.enabled(), false);

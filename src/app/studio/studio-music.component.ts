@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SliderModule } from 'primeng/slider';
-import { type StudioAudioState } from './studio-audio';
+import { STUDIO_MUSIC_DEFAULT_VOLUME, type StudioAudioState } from './studio-audio';
 import { STUDIO_SOUNDTRACK } from './studio-soundtrack';
 
 /** Controls emit intent; StudioAudioService owns playback and persisted state. */
@@ -18,7 +18,7 @@ export class StudioMusicComponent {
   @Input() enabled = true;
   @Input() openness = 0;
   @Input() panelOpen = false;
-  @Input() volume = 35;
+  @Input() volume = STUDIO_MUSIC_DEFAULT_VOLUME;
   @Input() audioState: StudioAudioState = 'waiting';
   @Output() readonly enabledChanged = new EventEmitter<boolean>();
   @Output() readonly panelOpenChange = new EventEmitter<boolean>();
