@@ -37,6 +37,11 @@ yarn-error.log
 testem.log
 /typings
 
+# Local development diagnostics and private drafting evidence
+/.codex-*.log
+/research/
+/RESEARCH.md
+
 # System files
 .DS_Store
 Thumbs.db

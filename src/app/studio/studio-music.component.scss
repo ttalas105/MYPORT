@@ -1,0 +1,38 @@
+:host { display: contents; }
+.studio-music { position: fixed; right: var(--page-margin, 24px); top: 74px; z-index: 160;
+  width: 320px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 90px); overflow-y: auto;
+  color: #f0e8dc; background: #282522; border-radius: 12px;
+  box-shadow: 0 6px 26px #0003; font: inherit; }
+.studio-music[hidden] { display: none; }
+header { min-height: 56px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 6px 6px 6px 14px; }
+strong { display: block; font-size: 15px; line-height: 1.2; font-weight: 600; }
+button { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0;
+  padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
+button:hover { background: #f0e8dc0c; border-radius: 6px; }
+button:focus-visible, a:focus-visible { outline: 2px solid #f0e8dc; outline-offset: 2px; }
+svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.music-controls { padding: 0 18px 15px; font-size: 13px;
+  --p-primary-color: #d8cfc3; --p-primary-contrast-color: #282522;
+  --p-slider-track-background: #615a52; --p-slider-range-background: #d8cfc3;
+  --p-slider-handle-background: #f0e8dc; --p-slider-handle-hover-background: #fff;
+  --p-checkbox-background: #3b3630; --p-checkbox-border-color: #918679;
+  --p-checkbox-checked-background: #d8cfc3; --p-checkbox-checked-border-color: #d8cfc3;
+  --p-checkbox-icon-checked-color: #282522; }
+.music-toggle, .music-volume-label { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.music-toggle { min-height: 40px; }
+.music-toggle label { cursor: pointer; }
+.music-volume-label { margin-top: 11px; color: #d8cfc3; font-size: 12px; }
+.music-volume-slider { padding: 17px 1px 5px; }
+p-slider { display: block; }
+footer { padding: 10px 14px 12px; font-size: 12px; line-height: 1.45; color: #d8cfc3; }
+footer a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+footer a:hover { color: #fff; }
+.music-track { display: block; color: #f0e8dc; margin-bottom: 3px; }
+.music-status { display: block; margin-top: 5px; }
+.music-resume { display: block; width: auto; margin-top: 6px; padding: 0 10px;
+  background: #f0e8dc14; border-radius: 6px; font: inherit; }
+@media (max-width: 760px) {
+  .studio-music { right: 16px; top: 76px; max-height: calc(100dvh - 92px); }
+}
+@media print { .studio-music { display: none; } }

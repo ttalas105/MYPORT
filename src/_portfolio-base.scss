@@ -1,0 +1,69 @@
+// Shared fonts, color tokens, document defaults and keyboard affordances.
+@font-face {
+  font-family: 'Hubot';
+  src: url('/fonts/hubot-sans-condensed-extrabold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Atkinson';
+  src: url('/fonts/atkinson-hyperlegible-next-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Funnel';
+  src: url('/fonts/funnel-display-latin.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+}
+
+:root {
+  --room-black: #050507;
+  --room-ink: #eeeae0;
+  --room-muted: #b6afb8;
+  --room-amber: #cda681;
+  --room-line: rgba(238, 234, 224, 0.18);
+  --directory-surface: #282522;
+  --directory-ink: #f0e8dc;
+  --directory-muted: #bfb3a5;
+  --directory-rule: #615a52;
+  --directory-divider: #403b35;
+  --directory-accent: #cda681;
+  --page: clamp(1.5rem, 4vw, 4rem);
+  color-scheme: dark;
+  font-family: 'Atkinson', Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--room-black); scroll-behavior: auto; scrollbar-gutter: stable; }
+body { margin: 0; min-width: 320px; color: var(--room-ink); background: var(--room-black); overflow-x: clip; }
+body:has(.index-layer.is-open), body:has(.project-explorer), body:has(.about-overlay) { overflow: hidden; }
+button, a { color: inherit; font: inherit; cursor: pointer; }
+button { padding: 0; border: 0; background: none; }
+a { text-decoration: none; }
+::selection { color: var(--room-black); background: var(--room-amber); }
+:focus-visible { outline: 2px solid var(--room-amber); outline-offset: 5px; }
+
+.skip-link {
+  position: fixed;
+  z-index: 90;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.75rem 0.95rem;
+  color: var(--room-black);
+  background: var(--room-amber);
+  transform: translateY(-180%);
+}
+.skip-link:focus { transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}

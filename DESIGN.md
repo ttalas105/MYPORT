@@ -1,90 +1,155 @@
 ---
 name: Thomas Talas
-description: Seasonal portfolio — bento playground, system fonts, 780px column
+description: A guided visit through a real-scale late-night music and coding studio
 colors:
-  base: "theme-dependent (Mocha: #1e1e2e)"
-  mantle: "theme-dependent (Mocha: #181825)"
-  crust: "theme-dependent (Mocha: #11111b)"
-  surface-0: "theme-dependent (Mocha: #313244)"
-  surface-1: "theme-dependent (Mocha: #45475a)"
-  surface-2: "theme-dependent (Mocha: #585b70)"
-  text: "theme-dependent (Mocha: #cdd6f4)"
-  subtext-1: "theme-dependent (Mocha: #bac2de)"
-  subtext-0: "theme-dependent (Mocha: #a6adc8)"
-  overlay-2: "theme-dependent (Mocha: #9399b2)"
-  overlay-1: "theme-dependent (Mocha: #7f849c)"
-  overlay-0: "theme-dependent (Mocha: #6c7086)"
-  accent: "var(--peach) default, user-selectable from 14 Catppuccin colors"
+  void: "#050507"
+  ink: "#eeeae0"
+  muted: "#b6afb8"
+  amber: "#cda681"
+  body: "#ded9df"
+  rail: "#88808c"
+  directory-surface: "#282522"
+  directory-ink: "#f0e8dc"
+  directory-muted: "#bfb3a5"
+  directory-rule: "#615a52"
+  directory-divider: "#403b35"
+  directory-accent: "#cda681"
+  violet: "#9986d2"
+  neon-hover: "#ffbdad"
+  neon-focus: "#ffe5d8"
+  welcome-surface: "#282522"
+  welcome-ink: "#f0e8dc"
+  welcome-body: "#d8cfc3"
+  welcome-accent: "#f1b39f"
+  studio: "#171512"
+  reader: "#282522"
+  reader-ink: "#f0e8dc"
+  reader-summary: "#d8cfc3"
+  reader-body: "#d8cfc3"
+  reader-accent: "#f1b39f"
+  vignette: "#0c0b0a"
 typography:
-  body:
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
-    fontSize: "0.938rem"
-    fontWeight: 400
-    lineHeight: 1.7
-  mono:
-    fontFamily: "ui-monospace, 'SF Mono', 'Cascadia Mono', 'Segoe UI Mono', monospace"
-    fontSize: "0.75rem"
-    fontWeight: 500
-spacing:
-  max-width: "780px"
-  section: "clamp(56px, 8vw, 112px)"
-  pad: "clamp(20px, 4vw, 32px)"
+  body: "Atkinson Hyperlegible Next"
+  display: "Funnel Display"
+  reader-display: "Funnel Display"
+  directory-display: "Hubot Sans Condensed ExtraBold"
 ---
 
-## Direction
+## Physical Scene
 
-Personal portfolio inspired by [Jason Cameron's Nyx](https://github.com/JasonLovesDoggo/nyx): projects first, compact control panels, playful counters, and a bento dashboard. The site uses custom seasonal themes (Spring, Summer, Fall, Winter) plus selectable accent colors.
+A visitor starts across a quiet nighttime city street, approaches the studio's solid fitted walnut door and scrolls through the opening into Thomas’s late-night music and coding studio. The wide opening camera is at (0, 4.2, 29), looking toward (0.4, 5.3, -14) with a 53-degree field of view. Neighboring buildings and a layered skyline rise behind the studio beneath a deep night sky. Pavement, sidewalks, brick facade edges, a capped parapet, roof and parked bicycle ground the existing entrance in the street. The closed door rests at zero rotation, with a fitted jamb, seals, bottom sweep and threshold. The entrance keeps the “Thomas Talas” heading and a clear “Enter the studio” action; the role and location subtitle is removed. A coral neon sign on the exterior wall reads “CLICK ME” in bent glass tubes mounted directly on the plaster, with slim ceramic supports and concealed electrode feeds. A native keyboard-accessible button follows the sign’s projected position. Clicking it opens Thomas’s welcome in a compact charcoal speech bubble beside the sign, or beneath it on mobile. “Hi there!” leads his introduction to the studio as a place for making music and coding; copy lives in `src/app/studio/studio-about.ts`. Escape or the back button restores focus and the entrance position; “Make yourself at home” enters the guided route. A text button provides the same welcome if WebGL is unavailable.
 
-## Stack
+The exterior pairs a walnut-and-felt shadowbox of mechanical keyboard keys and visible PCB details on the left with a small wood ledge beneath CLICK ME on the right, holding an unlabelled 12-inch vinyl record, headphones and a coiled cable. A rectangular walnut-and-felt backing frames the right-hand collection, with a small wall-mounted cassette above the record and clear wall beneath the neon. The two exterior sconces and their spotlight pools are removed; broad environmental fill keeps the entrance legible. The door and CLICK ME neon remain in place, with no additional interface controls or lighting fixtures.
 
-- **Framework**: Angular 19 (standalone components, signals)
-- **Language**: TypeScript (strict)
-- **Styles**: SCSS + CSS custom properties (seasonal palette)
-- **Fonts**: System stack only — zero network requests for typography
-- **Themes**: Spring/Summer/Fall/Winter classes on `<html>`, persisted in localStorage
-- **Motion**: Hero entrance only (opacity + translateY, respects prefers-reduced-motion)
+The Three.js scene is a complete room at human scale, with continuous flooring, wall thickness, ceiling, door frame, skirting and brass hardware. The camera travels through the actual doorway. Every visible architectural surface and furnishing is geometry; there is no photographic room backdrop or disappearing façade. Room and furniture rounded boxes use `studio-geometry.ts`, which reconstructs their authored dimensions from unit-cube normals. This corrects the installed addon's thin-part shrinkage and bent flat-face shading, preserving panel thickness and stable metre-based UV charts before batching.
 
-## Architecture
+Clicking the entrance neon sends one warm-white surge through the seven letters. A staggered spring motion lifts and tilts the tubes from their wall mounts, then settles them into place over 950ms as the local wall light returns to its resting level. The welcome bubble fades in over 320ms, rising 6px and scaling from 0.97 to its resting size without a delayed start. It is at most 25rem wide, with a 16px radius, warm readable text, a small pointer to the sign, and a compact close control. Positioning follows the sign and fits the available viewport space; only the copy scrolls when needed. The header, entrance title and chapter navigation stay visible unless the bubble overlaps them, in which case only the covered elements fade smoothly. Close, Escape or clicking outside starts a 180ms fade and slight retreat before the bubble is removed and covered interface elements return. The leaving bubble is inert and ignores pointer events. Reduced motion opens and closes it immediately with a stationary sign. The neon animation uses the scene's existing frame loop, ends at the original pose, and resets when the tab is hidden.
 
-```
-src/app/
-  components/
-    header/    — fixed floating-pills nav, no sidebar
-    hero/      — single-line name + intro paragraph with entrance animation
-    dashboard/ — bento grid: connect, location, click counter, now, season/accent controls
-    projects/  — featured project grid with tags from typed data
-    work/      — role list from typed data, featured first role
-    about/     — 3 paragraphs of real copy
-    footer/    — copyright + abacus view count
-  data/
-    portfolio.data.ts  — Role/Project interfaces, ROLES/PROJECTS arrays
-  services/
-    theme.service.ts — seasonal theme + accent color management
-    view-counter.service.ts — Abacus API integration
-```
+Walnut veneer, warm plaster, woven acoustic panels and a restrained violet wash establish the palette. Warm spotlights originate beneath the visible floor-lamp shades, with broad ceiling bounce and quieter cool window and monitor fill. Satin wood, fabric sheen, shaped upholstery, contact shadows and desk-wall battens give surfaces distinct responses to that light.
 
-## Themes
+## Route
 
-All 4 seasonal palettes are custom and applied as classes on `<html>`:
+Native page scroll drives one guided route. “Enter the studio” and the welcome’s “Make yourself at home” action share an eased entrance walk: 7.5 seconds from the initial city view, tapering to 4.5 seconds near the door, and arriving at the same inside viewpoint at scene progress 0.16. Wheel, touch, scroll keys or a new navigation action interrupt the walk; reduced motion arrives immediately. Project and Index navigation retain their existing behavior. The six navigation stops are shared by the reading layer and Index through `src/app/studio/studio-route.ts`. Scene progress and scroll progress are intentionally distinct: a reversible mapping adds 1.5 viewport heights to the city approach from 0 to 0.055 and retains the two added viewport heights between 0.16 and 0.265. The look-around still occupies 2.882 viewport heights, and later route legs retain their existing scroll distances. The story is 1290svh, including its sticky viewport, bound to the shared height constant. Navigation, active captions, reduced motion, and reading-view restoration use the same mapping.
 
-| Theme | Mood | Base | Surface | Text |
-|-------|------|------|---------|------|
-| Winter (default) | Cold midnight | `#0f1219` | `#1a1e28` | `#e2e8f0` |
-| Fall | Earthy amber | `#1c1410` | `#2a2018` | `#f0e4d4` |
-| Summer | Warm daylight | `#fdf6e8` | `#e0d3b8` | `#3a2e1c` |
-| Spring | Dewy green | `#f4f7f0` | `#d2dbc8` | `#2b3626` |
+| Scene progress | Composition | Content |
+| --- | --- | --- |
+| 0.00 | Nighttime city view across the street | Thomas Talas and entry action |
+| 0.055 | Near the closed walnut door | Existing entrance and CLICK ME welcome |
+| 0.16 | Inside the studio | An unobstructed first view of the room; the Enter button lands here |
+| 0.195–0.265 | A brief look around | An eye-level glance left toward the albums and lamps, a wide sweep right toward the Tapi workstation and window, then a forward approach to the workstations |
+| 0.30 | Creator workstation | Stanley for YouTube — independent project |
+| 0.48 | Close approach to the equipment rack | OKRA — TapMango, built from scratch |
+| 0.64 | Portal workstation | Portal — TapMango, team redesign; illustrative interface, no merchant data |
+| 0.80 | AI workstation with laptop and portrait source monitor | Tapi — TapMango, AI assistant |
+| 1.00 | Wide studio view | Get in touch — GitHub, LinkedIn and Email |
 
-14 accent colors available: rosewater, flamingo, pink, mauve, red, maroon, peach (default), yellow, green, teal, sky, sapphire, blue, lavender.
+After the wide entry composition at progress 0.16, the camera briefly looks around from near the entrance: left toward the albums and lamps at 0.195, right toward the Tapi workstation and window at 0.235, then forward toward the workstations at 0.265. The look around stays at eye level with a wide 58–60-degree field of view; it does not approach the record player. Native scrolling controls the pace before arriving at Stanley for YouTube at 0.30 and continuing through the remaining project stations. Introductory copy clears at progress 0.10, and the first project caption begins at 0.275, leaving the room unobstructed during the look around. Camera position, target and field of view ease between authored compositions with short arrival holds. OKRA approaches the equipment rack at progress 0.45 and holds through 0.56; its detail view moves closer to that same rack. The tight framing separates the rack from the neighboring Portal monitor. Captions follow rendered camera progress and clear during travel, so a project name does not remain over the next station.
 
-## Typography
+## Objects and Materials
 
-System font stack for body. System monospace for nav name, dates, metadata, tags, footer. No Google Fonts, no CDN, no FOUT.
+- A broad walnut-veneer workstation with two separately positioned monitors, individually instanced keycaps, an audio interface with recessed inputs and indexed knobs, and plugged leads routed toward the cable tray. Speakers have pressed cones, rolled surrounds and recessed tweeter waveguides. The task chair has a curved shell, crowned pads, piping and a five-star caster base.
+- An equipment rack representing OKRA, with rack ears, vents, screws, shaped controls and quiet meter lights. Fixed gear assemblies are batched by material; animated meter meshes remain separate.
+- A vinyl console with Kendrick Lamar’s *good kid, m.A.A.d city* and Larry June & The Alchemist’s *The Great Escape* facing outward from the lower cubbies, and JID’s *The Forever Story* on a tabletop stand beside the turntable. The framed wall collection remains J. Cole’s *2014 Forest Hills Drive* and *4 Your Eyez Only*, Denzel Curry’s *Melt My Eyez See Your Future*, and Freddie Gibbs & The Alchemist’s *Alfredo*. `studio-albums.ts` defines the two collections separately; local cover provenance is in `public/room/ALBUMS.md`.
+- All seven covers have clickable native keyboard targets, with interaction cues on mouse hover or keyboard focus. Selecting a cover moves the camera closer and shows an 18rem warm-paper sticky note containing only its title, artist and verified Spotify album link from `studio-albums.ts`. The note uses dark ink, a slight paper tilt and an offset shadow. Desktop frames the cover and note together with a 24px gap; mobile puts the note below the enlarged artwork. Close, Escape or clicking outside returns to the held room position while music continues. Reduced motion makes the viewpoint change immediate.
+- A 1.40 m Tapi workstation with a raised laptop, portrait source monitor, articulated warm task lamp, external keyboard, notebook, dock and connected cables. The laptop shows an illustrative loyalty question; the portrait display carries source and report context. Construction plans and rolled drawings have been removed from this corner.
 
-## Don'ts
+Tapi's reading view targets the paired displays at approximately (2.77, 1.17, -0.94). Its mobile approach centers the workstation and lowers the look target relative to the shared mobile framing, keeping the portrait display fully visible above the caption. These adjustments ease in and out around Tapi's existing route stop; other project stops retain their framing. Screen surfaces use warm paper and muted green to distinguish conversation from sources, with both explicitly marked as illustrative.
+- A tailored leather lounge chair with crowned cushions and stitched seams, a woven rug, acoustic battens and panels, suspended ceiling treatment and a potted plant.
+- The night window retains its frame, mullions and sill, with a restrained sky gradient, layered building silhouettes, aligned lit apertures and reflective glazing. Continuous pleated linen curtains have top and bottom hems, edge binding, hanging rings and a supported rod. Floor lamps retain their positions and footprints while gaining curved linen shades, inner linings, bound rims, sockets, harps and weighted bases.
 
-- No uppercase tracked section labels
-- No scroll animations or reveals
-- No gradient text or glassmorphism
-- No particle effects, orbs, noise, marquees
-- No Google Fonts
-- No card hover glow
+Music, work and gaming details give the room evidence of use: a clamped microphone beside the left monitor, an open notebook at the desk's left edge, reference books above the acoustic panels and a fabric-grille combo amp beside the vinyl console. The back-right music corner has a walnut synthesizer stand, raised sixteen-pad sampler, tucked padded stool, felt absorbers, wood diffuser and wall-hung guitar. A compact PC exposes its cooling hardware through a glass side; the lounge table holds a controller and handheld console, with books and game cases on the right-wall shelf. Walnut, fabric, brass, warm lamps and restrained violet remain the shared palette, and the project stations remain the dominant subjects.
+
+Locally stored CC0 PBR maps from Poly Haven separate the oak floorboards from continuous walnut veneer on furniture and door panels. The veneer uses a 2K diffuse map plus 1K OpenGL normal and roughness maps; floor, plaster and fabric retain their existing sources. Finished wood has restrained clearcoat, while fabric uses a plain color, fine weave normals and sheen. Normal strengths remain subtle: 0.15 for the floor, 0.12–0.14 for veneer, 0.12 for fabric, 0.10 for plaster and 0.2 for the rug. Texture anisotropy is capped at 8, including canvas screens. The twelve downloaded texture/HDR files total **9,709,544 bytes (9.26 MiB)**; provenance and checksums live in `public/studio-assets/ASSETS.md`, with the veneer acquisition in `wood-veneer/SOURCE.md`. These figures and the CC0 attribution exclude the soundtrack and generated runtime textures.
+
+Box-face UVs are scaled from physical dimensions: a floor tile covers 1.7m, veneer 1m, plaster 2.23m and the shared weave 0.265m. Each original face retains one UV chart across its bevels, and veneer grain follows the longer face direction. Custom surfaces and merged geometry retain authored UVs. The mapping runs during scene construction rather than during camera movement.
+
+The studio HDR supplies restrained environmental lighting through PMREM and is never displayed as a room background. After assets load, desktop captures the furnished room once with a 128px-per-face cubemap and filters it through PMREM. Reflective wood, metals and glazing use this local environment; the capture adds no per-frame work. Mobile and unsupported render targets retain the HDR reflection path. Temporary capture resources are released, and the retained reflection map follows scene disposal.
+
+Two broad warm spotlights follow the physical floor lamps; the main lamp casts a 2048px shadow on desktop or 1024px on mobile, and the second adds a 1024px shadow on desktop. A warm ceiling area light supplies soft bounce. Desktop adds GTAO contact occlusion with 16 samples at 0.6 blend intensity, followed by 16-sample denoising with radius 6 and two rings. SMAA edge smoothing runs before the output pass. Small screens retain modeled shadow pools, the reduced shadow setup and direct canvas MSAA, without GTAO or postprocessing.
+
+## Interface Layer
+
+The favicon is a simple warm ivory (#eeeae0) circle with a geometric charcoal (#282522) TT monogram, transparent outer corners and no square backing.
+
+The room carries the detail. Studio captions retain Funnel Display headings, Atkinson Hyperlegible Next body text, warm ink, amber accents and muted supporting text. Each project has one short semantic HTML panel with its contribution context directly below the heading. Side-positioned copy sits low in desktop compositions so the studio remains visible. The directory uses a charcoal surface matching the Music popover, warm text, amber actions and condensed uppercase project titles. Project readers share the welcome's charcoal speech-bubble treatment, with warm text and mixed-case Funnel headings.
+
+The four project introductions use a larger reading scale before “Explore project”: desktop Funnel titles are `clamp(3.6rem, 6.7vw, 6rem)` in panels up to `min(36rem, 42vw)`, with 1.2–1.5rem body text, 1rem contribution context and a 1.125rem Explore action. Phone titles range from 3–4.5rem with 1.125rem body text. A compact layout guard at heights up to 600px reduces type and spacing and keeps overflowing captions internally scrollable. Entrance, contact and project-reader typography retain their separate scales.
+
+The entrance’s “Enter the studio” button is a quiet text action without an arrow. Its own row aligns optically with the vertical stem of the T in Thomas Talas, using an inset of 0.24 times the shared responsive heading size rather than the crossbar’s left edge. The heading keeps its desktop clamp(3.5rem, 6.5vw, 5.5rem) and mobile clamp(3.7rem, 13vw, 5rem). The button retains muted 14px text, a 44px minimum hit area and a 1rem top gap (0.6rem in short landscape views). Hover and keyboard focus brighten and underline the label; keyboard focus also retains its visible outline.
+
+A bottom-center “Scroll to continue” cue pairs a small arrow with a gentle 3.2-second opacity cycle. At widths up to 1000px it occupies its own row above the chapter rail. Reduced motion keeps it static; it hides while loading, during the Index, welcome, project or album readers, and at the last chapter.
+
+The fixed header holds Music and Index, with no name in its top-left corner. Email remains in the studio's Get in touch section and opens `mailto:thomas@talas.ca`; every portfolio contact address, including the retained hidden résumé markup, uses `thomas@talas.ca`. Music opens a compact dark nonmodal settings popover; its accessible label is “Music settings.” Six horizontal line markers have 44px hit areas, accessible chapter names and an active state. The Index slides in from the right at `min(34rem, calc(100vw - 2rem))`, preserving a visible strip of the studio. Its #282522 charcoal surface matches the Music popover, with #f0e8dc ink, #bfb3a5 secondary text, #615a52 rules, #403b35 dividers and #cda681 actions. The fixed toolbar contains the Index label and a Close action with a 44px target. The project list begins directly below, without a name, role or location bio block. Four project names in locally hosted Hubot Condensed ExtraBold, weight 800, use uppercase lettering at `clamp(2.5rem, 4.6vw, 3.8rem)`. Atkinson purpose and contribution captions form aligned columns below each name; the contact group is left-aligned at the end of the scrolling content. Muted warm-gray horizontal tonal strips sit under the projects, giving the sections clear separation without outlined cards. There are no row numbers, repeated arrows, “Selected work” heading, or introductory tagline. The current project name is underlined. A hovered or keyboard-focused project turns amber while the other names recede.
+
+On desktop, hovering or focusing a project previews its actual 3D station in the visible studio without changing the route position. Camera position, look target and field of view ease continuously between previews. Preview mode is separate from project-reader framing, so the Index remains a right-side drawer even for Stanley for YouTube. Leaving the project list or closing the drawer returns the camera to the route; clicking a project closes the drawer and navigates to its deterministic scroll position. Mobile uses the same list for direct navigation without previewing behind the drawer. The surrounding studio remains visible behind a dismissible backdrop.
+
+The Index contact group sits at the end of the scrolling content, led by the larger mixed-case Funnel “Get in touch” action. GitHub and LinkedIn sit beneath the contact heading as plain text links in a compact horizontal row that wraps on narrow screens. “Back to the entrance” occupies its own bottom row outside that scroll area, anchored to the drawer’s bottom-left and always accessible while projects and contact scroll above it. It retains the only left arrow and bottom padding that respects the safe area. All controls retain 44px targets and the existing dark palette. The Studio music/Turkish Cotton strip is removed; music controls and the soundtrack link live only in the Music popover. The studio's Get in touch section contains GitHub, LinkedIn and an Email link to thomas@talas.ca. Persistent route progress numbers, coordinates, stage chips and repeated slogans are absent.
+
+Each of the four project stations offers an “Explore project” button. Opening it moves the camera closer to that station’s object and reveals a floating charcoal reading bubble: Stanley for YouTube uses the left side on desktop, while the other readers stay on the right; mobile keeps every bubble below the station. Every desktop reading camera adapts its field of view on compact widths to keep both the bubble and associated object housing visible. Stanley focuses its own left monitor; Tapi's framing includes both the laptop and portrait display. The bubble provides an overview, contribution context, and the complete technical narrative while keeping the current studio object in view. The room’s scroll position is held during reading; clicking outside, Escape, the close button labeled “Back to studio,” or “Continue through the studio” restores the original position and focus to the opening button. The title and 44px close control remain visible above one independently scrolling article. Reduced motion uses the close viewpoint without an animated approach or bubble entrance animation.
+
+The reader uses #282522 charcoal, #f0e8dc headings, #d8cfc3 body text and #f1b39f accents, with 16px corners, a soft shadow and a small speech pointer toward the station. Desktop centers it vertically with width `clamp(23rem, 44vw, 35rem)` and height `min(76dvh, 48rem)`. Every bubble anchors directly to its object's projected housing bounds, with a 32px gap from housing to bubble body that includes the 18px speech pointer. Tapi's bounds include both the laptop and portrait display. Stanley's left bubble points right; the other right-side readers point left. At widths up to 760px, the bubble has 16px side gutters, a bottom gap of at least 24px respecting the safe area, and a height of 61dvh, leaving the station visible above an upward pointer. Viewports no taller than 500px use a height of `calc(100dvh - 3rem)`.
+
+Funnel Display sets mixed-case project titles at 1.75–2.25rem and section headings at 1.25rem; Atkinson body text is 1rem with 1.65 line height. The fixed title bar sits outside the scrolling article, which contains the summary, contribution and stack details, all narrative sections, and the final return action. Native `details` and `summary` provide a collapsed “In this project” contents list with keyboard-accessible section buttons. Spacing separates these groups without divider lines. The optional draft notice is plain accent-colored text. The bubble fades and rises 8px while scaling from 0.96 to 1 over 360ms, originating beside the desktop pointer or beneath the mobile pointer. Reader styles are scoped to `.project-explorer` in `src/_project-reader.scss`; the Index uses a charcoal surface and retains its uppercase Hubot titles.
+
+Technical write-ups live in `src/app/project-details.ts`. Stanley for YouTube, OKRA, Portal V2, and Tapi contain source-backed narratives about implemented workflows, engineering decisions, and validation, with explicit contribution credits and a plain-text stack row. Local evidence and task-history references live in `research/portfolio/`, outside the public asset directory. Tapi replaces Joda at chapter 4, with six sections covering the assistant context, report access, approval, guides, memory, and verification. All four current cases are researched; the optional `draftNote` field remains available for future unverified narratives.
+
+## Interface References
+
+[Teenage Engineering’s OP–1 field presentation](https://teenage.engineering/products/op-1) informed the instrument-manual clarity: the object carries the atmosphere, with direct labels and readable technical detail around it. [Lineto’s typeface collection](https://lineto.com/typefaces) informed the use of project names as the directory’s main visual material. The implementation borrows these principles without copying site assets, branding or composition. The studio geometry, route and lighting retain their existing direction.
+
+## Motion and Sound
+
+The hinged solid walnut door opens from zero rotation with scroll before the visitor crosses its threshold. Camera movement follows native scrolling with damping and piecewise easing; deliberate Index previews and project reading views approach their selected station without pointer parallax. Ambient motion is confined to the rotating turntable, subtle meter activity and the Portal screen. The Portal video plays near its station, at progress 0.54–0.76, or while Portal is selected for an Index preview or reading view, and pauses elsewhere. Hidden tabs suspend scene animation and pause video.
+
+Reduced motion removes CSS transitions and smooth navigation, uses fixed city, near-door and room viewpoints, freezes record and meter animation, and pauses the Portal video on a still frame. The approach and look around switch between fixed stops without continuous camera travel or field-of-view animation. Index previews switch viewpoints immediately. Rendering occurs only when scroll, resize, assets, focused project or visibility state changes, rather than in an idle animation loop. The room and direct chapter controls remain available.
+
+Studio music is enabled by default unless a stored mute preference says otherwise. The Music popover is the sole music control surface and contains a PrimeNG 19 “Play music” binary Checkbox, a labeled 0–100 volume Slider, track information and a source link. Master volume defaults to 35 and is saved independently of the enabled preference. A shared 0.08 output multiplier follows the saved slider level in native audio, scaling output to 8% of that level (about 22dB attenuation) while retaining the slider setting and doorway filter. Angular FormsModule and ngModel connect the controls; labeled keyboard-accessible inputs use warm tokens in the dark popover. The default soundtrack uses native audio without a YouTube player or permanent player overlay. Closing the popover leaves playback running.
+
+The requested soundtrack is Turkish Cotton instrumental, obtained from the [YouTube upload by bootsandcats](https://www.youtube.com/watch?v=FT2b-kljjvY). The local AAC M4A is `public/studio-assets/audio/turkish-cotton-instrumental.m4a`: 2,686,943 bytes, 166.069116 seconds, 44.1kHz stereo. It was acquired with yt-dlp from audio-only format 140, retaining the AAC audio with an M4A container fix and no audio re-encoding. The upload is not represented as official, licensed or public domain; its availability does not establish publication rights. Source details and the local checksum are recorded in `public/studio-assets/audio/SOURCE.md`.
+
+The hidden `studio-soundtrack-media` element in `index.html` buffers the audio during HTML parsing. `StudioAudio` adopts that element without restarting its request, applies any already-available metadata cue, and attempts playback immediately on initialization. The scene uses the browser's idle trigger so it does not take the first render task ahead of audio preparation. The one-time cue in `studio-soundtrack.ts.startAtSeconds` is 7.2 seconds, at the stronger bass phrase; menus, mute/resume, visibility changes and normal looping never reapply it. Browsers may still require a first click, tap or keypress for audible playback.
+
+`src/app/studio/studio-soundtrack.ts` selects `/studio-assets/audio/turkish-cotton-instrumental.m4a`, played through the native `StudioAudio` Web Audio graph. Rendered camera depth determines room openness. A low-pass filter opens from 320Hz outside to 18kHz inside using `320 × (18000 / 320)^(openness^1.25)`, with its Web Audio Q set to approximately −3.01dB. Room gain rises smoothly from 0.8 to 1 and is multiplied by the chosen master level; the muffled entrance comes principally from filtering. The final 10% of openness blends smoothly into a dry bypass, with 80ms parameter ramps. Music continues through the Index, welcome, project readers and menu closure. Explicit mute and a hidden browser tab pause playback; browser restrictions are honored through an initial playback attempt and a first trusted gesture fallback.
+
+## Loading, Mobile and Fallback
+
+Angular `@defer` loads the scene separately from the initial interface. A small “Opening the studio…” status remains until assets are ready. An optional map failure retains its material and releases the loader.
+
+A stable scrollbar gutter keeps the header and canvas width fixed when the welcome or Index locks scrolling. Renderer and composer buffers are resized only when their dimensions or pixel ratio change, avoiding cleared frames from unchanged layout notifications.
+
+Album visibility uses cached interior mesh bounds before exact intersections, excluding city geometry. The bounds include instanced objects and the open console cubbies; only the moving door and platter need bounds updates. A settled camera keeps its projected album targets without repeated raycasts or DOM writes. Shadow maps refresh when the door moves or assets/layout change, rather than continuously during the vinyl glance.
+
+City windows compose their borders, glass, blinds and sashes on one surface per window. Pixel-coverage filtering softens distant edges, and the pane clears its masonry with an 80mm standoff and depth bias. No nearly coplanar window layers compete for depth while scrolling.
+
+The renderer and composer use the same pixel ratio. Desktop targets at least 1.5× sampling on standard displays and up to 2× on high-density displays, subject to a five-million-pixel budget; mobile uses a two-million-pixel budget. Both retain a native 1× floor so large displays are never downsampled below their CSS resolution. Mobile preserves the same guided room, widens camera field of view, raises the framing and keeps copy in a stable lower reading zone. Text, Index and Email remain usable while the scene loads or if WebGL creation fails or its context is lost. The fallback explicitly directs visitors to the Index.
+
+Keyboard navigation retains a visible focus indicator. After pointer activation of the neon welcome, Escape restores logical focus to the sign without a visible focus ring; subsequent keyboard navigation shows the indicator normally. The modal Index initially focuses Close and traps focus only while open; its Close action, backdrop click and Escape dismiss it and return focus to the Index trigger. Reduced motion opens and closes the drawer immediately.
+
+## Boundaries
+
+- Keep one coherent music and coding studio, with the work easy to reach through scroll or Index.
+- Preserve the full Stanley for YouTube name and label it “Independent project,” without a commissioning disclaimer.
+- Preserve project contribution credits and use illustrative interfaces without private data or invented metrics.
+- Keep plans on their desk and equipment grounded on real surfaces.
+- Avoid decorative route trails, floating pages, scanners, sci-fi effects, floating cards and slogan screens.
+- Honor stored mute and player pause choices, keep a visible music control, and retain semantic content and navigation when graphics or motion are limited.

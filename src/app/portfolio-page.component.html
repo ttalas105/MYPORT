@@ -1,0 +1,208 @@
+<header class="world-header" [class.project-focused]="detailProject() !== null || detailAlbum() !== null" [inert]="indexOpen() || detailProject() !== null || detailAlbum() !== null || aboutOpen()">
+  <div class="world-tools" [class.about-occluded]="aboutOcclusion().header">
+    <button #musicTrigger class="world-sound" data-audio-control data-music-menu type="button" (click)="setMusicOpen(!musicOpen())" [attr.aria-expanded]="musicOpen()" aria-controls="studio-music-panel" aria-label="Music settings" [class.is-muted]="!audio.enabled()">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8h3l4-4v12l-4-4H3z" />@if (audio.enabled()) { <path d="M13 7a5 5 0 0 1 0 6m2-9a9 9 0 0 1 0 12" /> } @else { <path d="m13 8 4 4m0-4-4 4" /> }</svg>
+      <span>Music</span>
+    </button>
+    <button #indexTrigger type="button" (click)="toggleIndex()" [attr.aria-expanded]="indexOpen()" aria-controls="portfolio-index">Index</button>
+  </div>
+</header>
+
+<app-studio-music [audioState]="audio.state()" (resumeRequested)="audio.resume()"
+  [panelOpen]="musicOpen()" (panelOpenChange)="setMusicOpen($event)"
+  [enabled]="audio.enabled()" (enabledChanged)="audio.setEnabled($event)"
+  [volume]="audio.volume()" (volumeChanged)="audio.setVolume($event)" [openness]="audio.openness()" />
+
+<main #story class="world-story" id="top" [style.height.svh]="storyHeight" [inert]="indexOpen() || detailProject() !== null || detailAlbum() !== null || aboutOpen()">
+  <div class="world-sticky" [class.studio-ready]="studioReady()" [class.studio-unavailable]="studioUnavailable()" [class.project-focused]="detailProject() !== null || detailAlbum() !== null || indexPreview() !== null">
+    @defer (on idle) {
+      <app-system-scene
+        [focusChapter]="detailProject()?.chapter ?? indexPreview()"
+        [readerChapter]="detailProject()?.chapter ?? null"
+        [selectedAlbumId]="detailAlbum()?.id ?? null"
+        [albumInteractionsBlocked]="indexOpen() || detailProject() !== null || aboutOpen()"
+        (readerPositionsChanged)="readerPositions.set($event)"
+        (albumRequested)="openAlbum($event)"
+        (albumReaderLeftChanged)="albumReaderLeft.set($event)"
+        (aboutRequested)="openAbout($event)"
+        (captionChanged)="captionChapter.set($event)"
+        (acousticsChanged)="audio.setOpenness($event)"
+        (sceneReady)="studioReady.set(true)"
+        (sceneUnavailable)="studioUnavailable.set(true); studioReady.set(true)"
+      />
+    }
+
+    <div class="world-vignette" aria-hidden="true"></div>
+    @if (!studioReady()) { <div class="studio-loading" role="status">Opening the studio…</div> }
+    @if (studioUnavailable()) { <p class="studio-fallback" role="status">The 3D studio isn’t available on this device. Explore the work with the Index.</p> }
+    <section class="story-panel story-panel--intro" [class.is-active]="chapterIsVisible(0) && atEntrance()" [class.about-occluded]="aboutOcclusion().intro" aria-labelledby="intro-title">
+      <h1 id="intro-title"><span>Thomas</span><span>Talas</span></h1>
+      @if (studioUnavailable()) { <button class="about-fallback" type="button" (click)="openAbout($event)" aria-haspopup="dialog" aria-controls="studio-about">About Thomas</button> }
+      <button class="enter-studio" type="button" (click)="enterStudio()">Enter the studio</button>
+    </section>
+
+    <section class="story-panel story-panel--project story-panel--stanley" [class.is-active]="chapterIsVisible(1)" aria-labelledby="stanley-title">
+      <h2 id="stanley-title">Stanley for YouTube</h2>
+      <div class="project-context">Independent project</div>
+      <p>A conversational creative tool we built to get the company’s attention.</p>
+      <button class="explore-project" type="button" (click)="openProject(1, $event)" aria-label="Explore Stanley for YouTube">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+    </section>
+
+    <section class="story-panel story-panel--project story-panel--okra" [class.is-active]="chapterIsVisible(2)" aria-labelledby="okra-title">
+      <h2 id="okra-title">OKRA</h2>
+      <div class="project-context">TapMango · built from scratch</div>
+      <p>Operational metrics that remain traceable from source to review.</p>
+      <button class="explore-project" type="button" (click)="openProject(2, $event)" aria-label="Explore OKRA">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+    </section>
+
+    <section class="story-panel story-panel--project story-panel--portal" [class.is-active]="chapterIsVisible(3)" aria-labelledby="portal-title">
+      <h2 id="portal-title">Portal</h2>
+      <div class="project-context">TapMango · team redesign</div>
+      <p>Redesigning the merchant portal with the team at TapMango.</p>
+      <small>Illustrative interface · no merchant data</small>
+      <button class="explore-project" type="button" (click)="openProject(3, $event)" aria-label="Explore Portal V2">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+    </section>
+
+    <section class="story-panel story-panel--project story-panel--tapi" [class.is-active]="chapterIsVisible(4)" aria-labelledby="tapi-title">
+      <h2 id="tapi-title">Tapi</h2>
+      <div class="project-context">TapMango · AI assistant</div>
+      <p>Merchant questions, supported reports, and answers grounded in sources.</p>
+      <button class="explore-project" type="button" (click)="openProject(4, $event)" aria-label="Explore Tapi">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+    </section>
+
+    <section class="story-panel story-panel--contact" [class.is-active]="chapterIsVisible(5)" aria-labelledby="contact-title">
+      <h2 id="contact-title">Get in touch.</h2>
+      <div class="contact-links">
+        <a href="https://github.com/ttalas105" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/thomas-talas-699518229/" target="_blank" rel="noreferrer">LinkedIn</a>
+        <a href="mailto:thomas@talas.ca">Email</a>
+      </div>
+    </section>
+
+    <div class="scroll-cue" [class.is-visible]="scrollCueVisible()" [attr.aria-hidden]="!scrollCueVisible()">
+      <span class="scroll-cue__content">Scroll to continue <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v13m-5-5 5 5 5-5" /></svg></span>
+    </div>
+
+    <nav class="chapter-rail" [class.about-occluded]="aboutOcclusion().rail" aria-label="Room progress">
+      @for (chapter of chapters; track chapter; let index = $index) {
+        <button
+          type="button"
+          (click)="scrollToChapter(index)"
+          [class.is-active]="activeChapter() === index"
+          [attr.aria-current]="activeChapter() === index ? 'step' : null"
+          [attr.aria-label]="'Go to ' + chapter"
+        >
+          <span aria-hidden="true"></span>
+        </button>
+      }
+    </nav>
+  </div>
+
+</main>
+
+@if (aboutOpen() || aboutLeaving()) {
+  <div class="about-overlay" [class.is-presented]="aboutPresented()" [class.is-leaving]="aboutLeaving()" [inert]="aboutLeaving()" [attr.aria-hidden]="aboutLeaving() ? 'true' : null">
+    <button class="about-dismiss" type="button" tabindex="-1" aria-hidden="true" (click)="closeAbout()"></button>
+    <section #aboutDialog id="studio-about" class="about-bubble" role="dialog" aria-modal="true" aria-labelledby="about-title">
+      <div class="about-bubble-header">
+        <h2 id="about-title">{{ about.title }}</h2>
+        <button class="about-close" type="button" (click)="closeAbout()" aria-label="Close welcome"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" /></svg></button>
+      </div>
+      <div class="about-bubble-copy" tabindex="0" role="region" aria-label="Welcome to my studio">
+        @for (paragraph of about.paragraphs; track paragraph) { <p>{{ paragraph }}</p> }
+      </div>
+      <button class="about-enter" type="button" (click)="enterFromAbout()">Make yourself at home <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+    </section>
+  </div>
+}
+
+@if (detailProject(); as project) {
+  <div class="project-explorer" [class.project-explorer--left]="project.id === 'stanley'" [style.--project-reader-left]="readerPositions()[project.chapter] !== undefined ? readerPositions()[project.chapter] + 'px' : null">
+    <button class="project-dismiss" type="button" tabindex="-1" aria-hidden="true" (click)="closeProject()"></button>
+    <section #projectDialog class="project-reader" role="dialog" aria-modal="true" aria-labelledby="project-detail-title">
+      <div class="project-reader-toolbar">
+        <h2 id="project-detail-title">{{ project.title }}</h2>
+        <button type="button" (click)="closeProject()" aria-label="Back to studio"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" /></svg></button>
+      </div>
+      <article class="project-writeup" tabindex="0" [attr.aria-label]="project.title + ' project details'">
+        <p class="project-reader-context">{{ project.context }}</p>
+        @if (project.draftNote) { <p class="project-draft-note">{{ project.draftNote }}</p> }
+        <p class="project-summary">{{ project.summary }}</p>
+        <dl class="project-role">
+          <dt>My role</dt><dd>{{ project.role }}</dd>
+          @if (project.stack) { <dt>Built with</dt><dd>{{ project.stack }}</dd> }
+        </dl>
+        <details class="project-contents">
+          <summary>In this project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4" /></svg></summary>
+          <nav aria-label="In this project">
+            @for (section of project.sections; track section.id) {
+              <button type="button" (click)="readSection(section.id)">{{ section.title }}</button>
+            }
+          </nav>
+        </details>
+        @for (section of project.sections; track section.id) {
+          <section [id]="'project-' + section.id" tabindex="-1" [attr.aria-labelledby]="'project-heading-' + section.id">
+            <h3 [id]="'project-heading-' + section.id">{{ section.title }}</h3>
+            @for (paragraph of section.paragraphs; track $index) { <p>{{ paragraph }}</p> }
+          </section>
+        }
+        <button class="project-end" type="button" (click)="closeProject()">Continue through the studio <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+      </article>
+    </section>
+  </div>
+}
+
+@if (detailAlbum() ?? leavingAlbum(); as album) {
+  <div class="project-explorer album-explorer" [class.is-leaving]="leavingAlbum() !== null" [inert]="leavingAlbum() !== null" [attr.aria-hidden]="leavingAlbum() ? 'true' : null" [style.--album-note-left]="albumReaderLeft() !== null ? albumReaderLeft() + 'px' : null">
+    <button class="project-dismiss" type="button" tabindex="-1" aria-hidden="true" (click)="closeAlbum()"></button>
+    <section #albumDialog id="studio-album" class="album-note" role="dialog" aria-modal="true" aria-labelledby="album-detail-title" aria-describedby="album-detail-artist">
+      <button class="album-note-close" type="button" (click)="closeAlbum()" aria-label="Close album"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" /></svg></button>
+      <h2 id="album-detail-title">{{ album.title }}</h2>
+      <p id="album-detail-artist">{{ album.artist }}</p>
+      <a class="album-spotify-link" [href]="album.spotifyUrl" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Listen to ' + album.title + ' by ' + album.artist + ' on Spotify (opens in a new tab)'">
+        Listen on Spotify <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M5 5h10v10" /></svg>
+      </a>
+    </section>
+  </div>
+}
+
+<div class="index-layer" [class.is-open]="indexOpen()" [attr.aria-hidden]="!indexOpen()" [inert]="!indexOpen()">
+  <button class="index-backdrop" type="button" tabindex="-1" aria-hidden="true" (click)="closeIndex()"></button>
+  <aside #indexDialog id="portfolio-index" class="world-index" role="dialog" aria-modal="true" aria-labelledby="index-title">
+    <div class="index-header">
+      <h2 id="index-title">Index</h2>
+      <button class="index-close" type="button" (click)="closeIndex()" aria-label="Close index">Close <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10m0-10L5 15" /></svg></button>
+    </div>
+    <div class="index-scroll">
+      <nav class="index-projects" aria-label="Projects" (mouseleave)="indexPreview.set(null)" (focusout)="leaveProjectList($event)">
+        @for (project of indexProjects; track project.chapter) {
+          <button class="index-project" type="button" (click)="scrollToChapter(project.chapter)" (mouseenter)="previewProject(project.chapter)" (focus)="previewProject(project.chapter)" [class.is-previewed]="indexPreview() === project.chapter" [attr.aria-current]="activeChapter() === project.chapter ? 'step' : null">
+            <span class="index-project-copy">
+              <strong>{{ project.title }}</strong>
+              <span class="index-project-caption"><span class="index-project-purpose">{{ project.description }}</span><span class="index-project-context">{{ project.context }}</span></span>
+            </span>
+          </button>
+        }
+      </nav>
+      <div class="index-footer">
+        <div class="index-shortcuts">
+          <div class="index-contact">
+            <button class="index-contact-title" type="button" (click)="scrollToChapter(5)">
+              <span>Get in touch</span>
+            </button>
+            <nav class="index-profiles" aria-label="Get in touch">
+              <a href="https://github.com/ttalas105" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <a href="https://www.linkedin.com/in/thomas-talas-699518229/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="index-bottom">
+      <button class="index-return" type="button" (click)="scrollToChapter(0)">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 10H3m6-6-6 6 6 6" /></svg>
+        <span>Back to the entrance</span>
+      </button>
+    </div>
+  </aside>
+</div>

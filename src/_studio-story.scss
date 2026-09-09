@@ -1,0 +1,171 @@
+// Route height comes from the shared studio route constant through the inline binding.
+.world-story { position: relative; height: 1140svh; background: #171512; }
+.world-sticky {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: #171512;
+}
+.world-sticky app-system-scene { position: absolute; z-index: -2; inset: 0; opacity: 0; transition: opacity 800ms ease; }
+.world-sticky.studio-ready app-system-scene { opacity: 1; }
+.world-vignette {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(0deg, rgba(12, 11, 10, .7), transparent 42%, transparent 83%, rgba(12, 11, 10, .35));
+}
+
+// Shared caption structure; each named station supplies its side of the room.
+.story-panel {
+  position: absolute;
+  z-index: 3;
+  width: min(29rem, calc(100vw - var(--page) * 2));
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 240ms ease-out, visibility 0s linear 240ms;
+}
+.story-panel::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -4rem -5rem;
+  pointer-events: none;
+  opacity: .78;
+  background: radial-gradient(ellipse at 35% 52%, rgba(5, 5, 7, .96), rgba(5, 5, 7, .72) 50%, transparent 75%);
+}
+.story-panel.is-active { pointer-events: auto; visibility: visible; opacity: 1; transition-delay: 0s; }
+.story-panel h1, .story-panel h2 { margin: 0; color: var(--room-ink); text-wrap: balance; }
+.story-panel h2 { font: 560 clamp(2.4rem, 3.7vw, 3.6rem)/1.05 'Funnel', sans-serif; letter-spacing: -.035em; }
+.story-panel > p {
+  max-width: 27rem;
+  margin: 1.25rem 0 0;
+  color: #ded9df;
+  font-size: clamp(.95rem, 1.1vw, 1.1rem);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+.project-context { margin-top: 1rem; color: var(--room-muted); font-size: .8rem; line-height: 1.5; }
+
+.story-panel--intro { --intro-title-size: clamp(3.5rem, 6.5vw, 5.5rem); bottom: 15%; left: var(--page); width: min(32rem, 47vw); }
+.story-panel--intro h1 {
+  display: flex;
+  flex-direction: column;
+  font: 550 var(--intro-title-size)/.96 'Funnel', sans-serif;
+  letter-spacing: -.035em;
+}
+.story-panel--intro > .about-fallback { margin-right: 1.5rem; }
+.story-panel--intro > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 1.8rem;
+  color: var(--room-amber);
+  font-size: .85rem;
+}
+.story-panel--intro > .enter-studio {
+  display: flex;
+  justify-content: flex-start;
+  width: fit-content;
+  margin-top: 1rem;
+  // Align with the T's vertical stroke, not the edge of its crossbar.
+  margin-inline-start: calc(var(--intro-title-size) * .24);
+  color: var(--room-muted);
+  font-size: .875rem;
+  text-align: left;
+  transition: color 160ms ease;
+}
+.story-panel--intro > button:hover { color: var(--room-ink); }
+.story-panel--intro > .enter-studio:is(:hover, :focus-visible) { color: var(--room-ink); text-decoration: underline; text-underline-offset: .25em; }
+
+.story-panel--stanley, .story-panel--portal { top: auto; right: var(--page); text-align: right; }
+.story-panel--stanley::before, .story-panel--portal::before {
+  background: radial-gradient(ellipse at 68% 50%, rgba(5, 5, 7, .96), rgba(5, 5, 7, .72) 52%, transparent 76%);
+}
+.story-panel--okra, .story-panel--tapi { top: auto; left: var(--page); }
+.story-panel--portal small { display: block; margin-top: 1rem; color: var(--room-muted); line-height: 1.5; }
+.story-panel--contact { bottom: 15%; left: var(--page); width: min(42rem, 62vw); }
+.contact-links { display: flex; column-gap: 1.75rem; flex-wrap: wrap; margin-top: 1.25rem; }
+.contact-links a { display: inline-flex; align-items: center; min-height: 44px; color: var(--room-amber); font-size: 1.05rem; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .3em; }
+.contact-links a:hover { color: var(--room-ink); }
+
+// Project arrivals use a larger reading scale than entrance and contact captions.
+.story-panel--project { width: min(36rem, 42vw); bottom: max(7.5rem, 12svh); }
+.story-panel--project h2 { font-size: clamp(3.6rem, 6.7vw, 6rem); line-height: 1.02; }
+.story-panel--project > p { max-width: 34rem; margin-top: 1.35rem; font-size: clamp(1.2rem, 1.6vw, 1.5rem); line-height: 1.5; }
+.story-panel--project .project-context { margin-top: 1.1rem; font-size: 1rem; line-height: 1.45; }
+.story-panel--project small { font-size: .875rem; }
+.story-panel--stanley > p, .story-panel--portal > p { margin-left: auto; }
+.explore-project {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 44px;
+  margin-top: 1.4rem;
+  color: var(--room-amber);
+  font-size: 1.125rem;
+}
+.explore-project:hover { color: var(--room-ink); }
+.explore-project svg { width: 1.3rem; height: 1.3rem; fill: none; stroke: currentColor; stroke-width: 1.5; }
+
+.studio-loading { position: absolute; top: 48%; left: 0; right: 0; text-align: center; color: #cda681; font-size: .85rem; }
+.studio-fallback { position: absolute; top: 18%; left: var(--page); max-width: 28rem; margin: 0; color: var(--room-muted); font-size: .85rem; line-height: 1.6; }
+.studio-unavailable { background: #171512; }
+
+@media (max-width: 760px) {
+  .story-panel, .story-panel--intro, .story-panel--stanley, .story-panel--okra, .story-panel--portal, .story-panel--tapi, .story-panel--contact {
+    top: auto;
+    right: var(--page);
+    bottom: 17%;
+    left: var(--page);
+    width: auto;
+    max-width: 30rem;
+    text-align: left;
+  }
+  .story-panel::before, .story-panel--stanley::before, .story-panel--portal::before {
+    inset: -3rem -2rem;
+    background: radial-gradient(ellipse at 32% 64%, rgba(5, 5, 7, .98), rgba(5, 5, 7, .8) 60%, transparent 88%);
+  }
+  .story-panel h2 { font-size: clamp(2.1rem, 8.3vw, 3.3rem); }
+  .story-panel > p { margin-top: 1rem; font-size: .98rem; line-height: 1.5; }
+  .project-context { margin-top: .8rem; font-size: .76rem; }
+  .story-panel--intro, .story-panel--contact { bottom: 14%; }
+  .story-panel--intro { --intro-title-size: clamp(3.7rem, 13vw, 5rem); }
+  .story-panel--intro > button { margin-top: 1rem; }
+  .world-vignette { background: linear-gradient(0deg, rgba(12, 11, 10, .9), transparent 64%); }
+
+  .story-panel--project { width: auto; max-width: 36rem; bottom: max(8.25rem, 14svh); }
+  .story-panel--project h2 { font-size: clamp(3rem, 11.8vw, 4.5rem); }
+  .story-panel--project > p { font-size: 1.125rem; margin-top: 1.05rem; line-height: 1.45; }
+  .story-panel--project .project-context { margin-top: .85rem; font-size: .95rem; }
+  .story-panel--project .explore-project { margin-top: 1.05rem; font-size: 1.05rem; }
+  .story-panel--stanley > p, .story-panel--portal > p { margin-left: 0; }
+}
+
+// The existing short-landscape layout only tightens caption/action spacing.
+@media (max-height: 500px) and (orientation: landscape) {
+  .story-panel--intro, .story-panel--contact { top: auto; }
+  .story-panel > p, .project-context { margin-top: .55rem; }
+  .story-panel--intro > button, .story-panel--intro > .enter-studio { margin-top: .6rem; }
+}
+
+// This guard wins after the phone layout when both constraints apply.
+@media (max-height: 600px) {
+  .story-panel--project {
+    bottom: 5.5rem;
+    max-height: calc(100svh - 10.5rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  .story-panel--project::before { inset: 0; }
+  .story-panel--project h2 { font-size: clamp(2.5rem, 8svh, 3rem); }
+  .story-panel--project > p { margin-top: .55rem; font-size: 1rem; line-height: 1.4; }
+  .story-panel--project .project-context { margin-top: .55rem; font-size: .875rem; }
+  .story-panel--project .explore-project { margin-top: .4rem; font-size: 1rem; }
+  .story-panel--project small { margin-top: .4rem; font-size: .8rem; }
+}

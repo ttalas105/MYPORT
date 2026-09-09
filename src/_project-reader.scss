@@ -1,0 +1,239 @@
+.project-explorer {
+  --reader-surface: #282522;
+  --reader-ink: #f0e8dc;
+  --reader-body: #d8cfc3;
+  --reader-accent: #f1b39f;
+  --reader-gutter: 1.75rem;
+
+  position: fixed;
+  z-index: 70;
+  inset: 0;
+  color-scheme: dark;
+
+  :focus-visible { outline-color: var(--reader-accent); outline-offset: 3px; }
+  ::selection { color: var(--reader-surface); background: var(--reader-accent); }
+
+  .project-dismiss {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: default;
+  }
+
+  .project-reader {
+    position: absolute;
+    top: 50%;
+    right: clamp(1.5rem, 4vw, 5rem);
+    display: flex;
+    flex-direction: column;
+    width: clamp(23rem, 44vw, 35rem);
+    height: min(76dvh, 48rem);
+    border-radius: 16px;
+    color: var(--reader-ink);
+    background: var(--reader-surface);
+    box-shadow: 0 16px 48px rgb(0 0 0 / .3);
+    transform: translateY(-50%);
+    transform-origin: left 35%;
+    animation: project-bubble-enter 360ms cubic-bezier(.16, 1, .3, 1) both;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: calc(35% - 10px);
+      left: -18px;
+      width: 20px;
+      height: 20px;
+      background: var(--reader-surface);
+      clip-path: polygon(100% 0, 0 50%, 100% 100%);
+    }
+  }
+
+  .project-reader-toolbar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem var(--reader-gutter) 1rem;
+
+    h2 {
+      margin: 0;
+      font: 550 clamp(1.75rem, 2.5vw, 2.25rem)/1.15 'Funnel', sans-serif;
+      letter-spacing: -.02em;
+      text-wrap: balance;
+      overflow-wrap: break-word;
+    }
+
+    button {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      margin: -.5rem -.5rem -.5rem 0;
+      color: var(--reader-body);
+      border-radius: 50%;
+      &:hover { color: var(--reader-ink); background: rgb(240 232 220 / .08); }
+    }
+  }
+
+  svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  .project-writeup {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #918679 var(--reader-surface);
+    border-radius: 0 0 16px 16px;
+    padding: 0 var(--reader-gutter) 1.75rem;
+    color: var(--reader-body);
+    outline-offset: -4px;
+
+    section { margin-top: 2rem; scroll-margin-top: 1rem; }
+    h3 {
+      margin: 0 0 .75rem;
+      color: var(--reader-ink);
+      font: 550 1.25rem/1.3 'Funnel', sans-serif;
+      text-wrap: balance;
+    }
+    section p {
+      margin: 0 0 1rem;
+      font-size: 1rem;
+      line-height: 1.65;
+      text-wrap: pretty;
+    }
+  }
+
+  .project-reader-context {
+    margin: 0;
+    color: var(--reader-accent);
+    font-size: .8125rem;
+    line-height: 1.5;
+  }
+  .project-draft-note {
+    margin: 1rem 0 0;
+    color: var(--reader-accent);
+    font-size: .8125rem;
+    line-height: 1.5;
+  }
+  .project-summary {
+    margin: 1.25rem 0 0;
+    font-size: 1rem;
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+  .project-role {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: .75rem 1rem;
+    margin: 1.5rem 0 0;
+    font-size: .8125rem;
+    line-height: 1.55;
+    dt { color: var(--reader-ink); }
+    dd { margin: 0; }
+  }
+
+  .project-contents {
+    margin-top: 1.5rem;
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 44px;
+      color: var(--reader-accent);
+      font-size: .875rem;
+      cursor: pointer;
+      list-style: none;
+      &::-webkit-details-marker { display: none; }
+      &:hover { color: var(--reader-ink); }
+    }
+    &[open] summary svg { transform: rotate(180deg); }
+    nav { display: grid; gap: .25rem; padding-top: .5rem; }
+    button {
+      min-height: 44px;
+      padding-block: .5rem;
+      color: var(--reader-body);
+      font-size: .875rem;
+      line-height: 1.4;
+      text-align: left;
+      &:hover { color: var(--reader-accent); text-decoration: underline; text-underline-offset: .25em; }
+    }
+  }
+
+  .project-end {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 2rem;
+    color: var(--reader-accent);
+    font-size: .875rem;
+    line-height: 1.5;
+    text-align: left;
+    &:hover { color: var(--reader-ink); }
+  }
+}
+
+@keyframes project-bubble-enter {
+  from { opacity: 0; transform: translateY(calc(-50% + 8px)) scale(.96); }
+  to { opacity: 1; transform: translateY(-50%) scale(1); }
+}
+
+@media (min-width: 761px) {
+  .project-explorer .project-reader {
+    right: auto;
+    left: var(--project-reader-left, calc(100% - clamp(23rem, 44vw, 35rem) - clamp(1.5rem, 4vw, 5rem)));
+  }
+  .project-explorer--left .project-reader {
+    left: var(--project-reader-left, clamp(1.5rem, 4vw, 5rem));
+    transform-origin: right 35%;
+    &::before {
+      left: auto;
+      right: -18px;
+      clip-path: polygon(0 0, 100% 50%, 0 100%);
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .project-explorer {
+    --reader-gutter: 1.25rem;
+    .project-reader {
+      top: auto;
+      right: 1rem;
+      bottom: max(1.5rem, env(safe-area-inset-bottom));
+      width: calc(100% - 2rem);
+      height: 61dvh;
+      transform: none;
+      transform-origin: 35% top;
+      animation-name: project-bubble-enter-mobile;
+      &::before {
+        top: -18px;
+        left: calc(35% - 10px);
+        clip-path: polygon(50% 0, 100% 100%, 0 100%);
+      }
+    }
+    .project-reader-toolbar { padding-top: 1.25rem; }
+    .project-reader-toolbar h2 { font-size: 1.75rem; }
+  }
+}
+
+@media (max-height: 500px) {
+  .project-explorer .project-reader { height: calc(100dvh - 3rem); }
+}
+
+@keyframes project-bubble-enter-mobile {
+  from { opacity: 0; transform: translateY(8px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

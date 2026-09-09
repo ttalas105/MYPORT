@@ -1,0 +1,33 @@
+<section id="studio-music-panel" class="studio-music" role="dialog" aria-label="Studio music"
+  [attr.data-audio-state]="audioState" [attr.data-room-openness]="openness"
+  [hidden]="!panelOpen" [attr.inert]="!panelOpen ? '' : null">
+  <header>
+    <strong>Studio music</strong>
+    <button type="button" (click)="panelOpenChange.emit(false)" aria-label="Close music controls">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+    </button>
+  </header>
+  <div class="music-controls">
+    <div class="music-toggle">
+      <label for="studio-popover-music-enabled">Play music</label>
+      <p-checkbox inputId="studio-popover-music-enabled" [binary]="true"
+        [ngModel]="enabled" (ngModelChange)="enabledChanged.emit($event)" />
+    </div>
+    <div class="music-volume-label"><span id="studio-music-volume-label">Volume</span><span>{{ volume }}%</span></div>
+    <div class="music-volume-slider">
+      <p-slider [ngModel]="volume" (ngModelChange)="volumeChanged.emit($event)"
+        [min]="0" [max]="100" [step]="1" [disabled]="!enabled" ariaLabelledBy="studio-music-volume-label" />
+    </div>
+  </div>
+  <footer>
+    <span class="music-track">{{ soundtrack.title }}</span>
+    <a [href]="soundtrack.source" target="_blank" rel="noopener">Source upload by bootsandcats</a>
+    @if (audioState === 'waiting' && enabled) {
+      <button class="music-resume" type="button" (click)="resumeRequested.emit()">Play music</button>
+    } @else if (audioState === 'loading') {
+      <span class="music-status" role="status">Loading music…</span>
+    } @else if (audioState === 'unavailable') {
+      <span class="music-status" role="status">Music unavailable. Try switching music off and on.</span>
+    }
+  </footer>
+</section>
