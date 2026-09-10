@@ -6,17 +6,32 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js';
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { StudioQuality, studioPixelRatio } from './studio-quality';
+
+/** AO does not need the same pixel density as the final color and text. */
+class StudioAmbientOcclusion extends GTAOPass {
+    override setSize(width: number, height: number): void {
+        super.setSize(Math.max(1, Math.round(width / 2)), Math.max(1, Math.round(height / 2)));
+    }
+}
 
 /** Owns GPU rendering resources; the scene host owns geometry, camera motion and input. */
 export class StudioRendering {
     readonly renderer: THREE.WebGLRenderer;
+    readonly quality: StudioQuality;
     private composer?: EffectComposer;
+    private ambientOcclusion?: GTAOPass;
+    private width = 1;
+    private height = 1;
+    private smallScreen = false;
     private environment?: THREE.WebGLRenderTarget;
     private environmentGenerator?: THREE.PMREMGenerator;
     private roomReflections?: THREE.WebGLRenderTarget;
     private disposed = false;
 
     constructor(canvas: HTMLCanvasElement) {
+        const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+        this.quality = new StudioQuality(window.innerWidth < 761 || navigator.hardwareConcurrency <= 4 || (memory !== undefined && memory <= 4));
         const renderer = this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -59,10 +74,11 @@ export class StudioRendering {
     configurePostprocessing(scene: THREE.Scene, camera: THREE.PerspectiveCamera, smallScreen: boolean): void {
         // Mobile retains canvas MSAA and modeled contact shadows rather than
         // allocating the desktop's full-screen occlusion/postprocessing targets.
-        if (smallScreen || (navigator as Navigator & { deviceMemory?: number }).deviceMemory === 2) return;
+        if (smallScreen) return;
         const composer = this.composer = new EffectComposer(this.renderer);
         composer.addPass(new RenderPass(scene, camera));
-        const ao = new GTAOPass(scene, camera, 1, 1);
+        const ao = this.ambientOcclusion = new StudioAmbientOcclusion(scene, camera, 1, 1);
+        ao.enabled = this.quality.level === 'high';
         ao.output = GTAOPass.OUTPUT.Default;
         ao.blendIntensity = .6;
         ao.updateGtaoMaterial({ radius: .22, thickness: .5, distanceFallOff: 1, scale: 1, samples: 16 });
@@ -76,7 +92,7 @@ export class StudioRendering {
 
     /** Capture the furnished room once; no reflection capture runs in the frame loop. */
     captureRoomReflections(scene: THREE.Scene, materials: readonly THREE.MeshStandardMaterial[], smallScreen: boolean): void {
-        if (this.disposed || this.roomReflections || smallScreen) return;
+        if (this.disposed || this.roomReflections || smallScreen || this.quality.level !== 'high') return;
         const renderer = this.renderer;
         if (!renderer.extensions.has('EXT_color_buffer_float')) return;
         const previousTarget = renderer.getRenderTarget();
@@ -109,10 +125,10 @@ export class StudioRendering {
     }
 
     resize(width: number, height: number, smallScreen: boolean, camera: THREE.PerspectiveCamera): void {
-        // Retain desktop supersampling, the mobile budget and the native 1x floor.
-        const preferredRatio = Math.min(2, Math.max(devicePixelRatio, smallScreen ? 1 : 1.5));
-        const pixelBudget = smallScreen ? 2_000_000 : 5_000_000;
-        const pixelRatio = Math.min(preferredRatio, Math.max(1, Math.sqrt(pixelBudget / (width * height))));
+        this.width = width;
+        this.height = height;
+        this.smallScreen = smallScreen;
+        const pixelRatio = studioPixelRatio(width, height, devicePixelRatio, this.quality.level);
         const previousSize = this.renderer.getSize(new THREE.Vector2());
         const sizeChanged = previousSize.x !== width || previousSize.y !== height;
         const ratioChanged = this.renderer.getPixelRatio() !== pixelRatio;
@@ -127,8 +143,14 @@ export class StudioRendering {
         this.renderer.shadowMap.needsUpdate = true;
     }
 
+    adapt(frameMs: number, moving: boolean, now: number, camera: THREE.PerspectiveCamera): void {
+        if (!this.quality.observe(frameMs, moving, now)) return;
+        if (this.ambientOcclusion) this.ambientOcclusion.enabled = this.quality.level === 'high';
+        this.resize(this.width, this.height, this.smallScreen, camera);
+    }
+
     render(scene: THREE.Scene, camera: THREE.PerspectiveCamera, smallScreen: boolean, dt: number): void {
-        if (this.composer && !smallScreen) this.composer.render(dt);
+        if (this.composer && !smallScreen && this.quality.level !== 'low') this.composer.render(dt);
         else this.renderer.render(scene, camera);
     }
 

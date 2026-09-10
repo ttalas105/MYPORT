@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, NgZone, OnDestroy, Output, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, NgZone, OnDestroy, Output, QueryList, ViewChild, ViewChildren, isDevMode } from '@angular/core';
 import * as THREE from 'three';
-import { buildStudioFurniture, StudioMaterials } from './studio/studio-furniture';
+import { buildStudioFurniture, StudioMaterials, StudioProjectTarget } from './studio/studio-furniture';
 import { buildStudioRoom } from './studio/studio-room';
 import { buildStudioWorkDetails } from './studio/studio-work-details';
 import { buildStudioMusicCorner } from './studio/studio-music-corner';
@@ -16,6 +16,10 @@ import { studioAlbumView, StudioAlbumView } from './studio/studio-album-views';
 import { StudioAlbumOcclusion } from './studio/studio-album-occlusion';
 import { addStudioContactShadows, addStudioLighting } from './studio/studio-lighting';
 import { StudioRendering } from './studio/studio-rendering';
+import { StudioPerformance } from './studio/studio-performance';
+import { batchStaticStudio, freezeStudioTransforms } from './studio/studio-batching';
+import { StudioFrameBudget } from './studio/studio-quality';
+import { PROJECT_DETAILS } from './project-details';
 interface CameraKey {
     t: number;
     position: THREE.Vector3;
@@ -31,10 +35,18 @@ interface CameraKey {
         aria-label="CLICK ME — About Thomas" aria-haspopup="dialog" aria-controls="studio-about"
         (click)="activateAbout($event)"></button>
       @for (album of albums; track album.id) {
-        <button #albumTrigger class="scene-album-trigger" type="button" hidden disabled
+        <button #albumTrigger class="scene-object-trigger scene-album-trigger" type="button" hidden disabled
           [attr.data-album-id]="album.id" [attr.aria-label]="'Explore ' + album.title + ' by ' + album.artist"
           aria-haspopup="dialog" aria-controls="studio-album" (click)="activateAlbum(album.id, $event)"
-          (keydown)="clearAlbumPointerFocus($event)">
+          (keydown)="clearObjectPointerFocus($event)">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon vector-effect="non-scaling-stroke" /></svg>
+        </button>
+      }
+      @for (project of projectObjects; track project.id) {
+        <button #projectTrigger class="scene-object-trigger scene-project-trigger" type="button" hidden disabled
+          [attr.data-project-id]="project.id" [attr.aria-label]="'Explore ' + project.title + ' — ' + project.object"
+          aria-haspopup="dialog" aria-controls="project-reader" (click)="activateProject(project.id, project.chapter, $event)"
+          (keydown)="clearObjectPointerFocus($event)">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon vector-effect="non-scaling-stroke" /></svg>
         </button>
       }`,
@@ -42,15 +54,15 @@ interface CameraKey {
       canvas{display:block;width:100%;height:100%;touch-action:pan-y}
       .scene-about-trigger{position:absolute;min-width:44px;min-height:44px;touch-action:pan-y;border-radius:4px}
       .scene-about-trigger:focus-visible{outline:2px solid #ffe5d8;outline-offset:6px}
-      .scene-album-trigger{position:absolute;z-index:2;padding:0;border:0;background:transparent;box-shadow:none;cursor:pointer;touch-action:pan-y;border-radius:2px}
-      .scene-album-trigger[hidden]{display:none}
-      .scene-album-trigger svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;opacity:0;transition:opacity 160ms ease;pointer-events:none}
-      .scene-album-trigger polygon{fill:rgba(255,229,205,.025);stroke:#ffe5d8;stroke-width:2}
-      .scene-album-trigger:hover svg,.scene-album-trigger:focus-visible svg{opacity:1}
-      .scene-album-trigger:focus-visible{outline:none}
-      .scene-album-trigger:focus-visible polygon{stroke-width:4}
-      .scene-album-trigger.pointer-focus-return:focus-visible:not(:hover) svg{opacity:0}
-      @media(prefers-reduced-motion:reduce){.scene-album-trigger svg{transition:none}}`],
+      .scene-object-trigger{position:absolute;z-index:2;padding:0;border:0;background:transparent;box-shadow:none;cursor:pointer;touch-action:pan-y;border-radius:2px}
+      .scene-object-trigger[hidden]{display:none}
+      .scene-object-trigger svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;opacity:0;transition:opacity 160ms ease;pointer-events:none}
+      .scene-object-trigger polygon{fill:rgba(255,229,205,.025);stroke:#ffe5d8;stroke-width:2}
+      .scene-object-trigger:hover svg,.scene-object-trigger:focus-visible svg{opacity:1}
+      .scene-object-trigger:focus-visible{outline:none}
+      .scene-object-trigger:focus-visible polygon{stroke-width:4}
+      .scene-object-trigger.pointer-focus-return:focus-visible:not(:hover) svg{opacity:0}
+      @media(prefers-reduced-motion:reduce){.scene-object-trigger svg{transition:none}}`],
 })
 export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     @ViewChild('canvas', { static: true })
@@ -59,7 +71,19 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     private readonly aboutTriggerRef!: ElementRef<HTMLButtonElement>;
     @ViewChildren('albumTrigger')
     private readonly albumTriggerRefs!: QueryList<ElementRef<HTMLButtonElement>>;
+    @ViewChildren('projectTrigger')
+    private readonly projectTriggerRefs!: QueryList<ElementRef<HTMLButtonElement>>;
     readonly albums = STUDIO_ALL_ALBUMS;
+    readonly projectObjects = PROJECT_DETAILS.flatMap(project => [
+        { id: `project-${project.chapter}`, chapter: project.chapter, title: project.title, object: project.chapter === 2 ? 'server rack' : project.chapter === 4 ? 'laptop' : 'monitor' },
+        ...(project.chapter === 4 ? [{ id: 'project-4-evidence', chapter: 4, title: project.title, object: 'sources monitor' }] : []),
+    ]);
+    private projectTargets: Record<string, StudioProjectTarget> = {};
+    private projectReturnId: string | null = null;
+    private projectRestorePending = false;
+    private projectPointerActivation = false;
+    @Output()
+    readonly projectRequested = new EventEmitter<{ chapter: number; event: Event }>();
     @Output()
     readonly aboutRequested = new EventEmitter<Event>();
     @Output()
@@ -82,6 +106,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         const previous = this.selectedAlbum;
         this.selectedAlbum = next;
         this.albumFocusTarget = next ? 1 : 0;
+        if (next) this.directViewPending = true;
         if (next) {
             if (!previous) {
                 this.albumRouteProgress ??= this.progress;
@@ -129,10 +154,11 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     private readonly albumCameraPosition = new THREE.Vector3();
     private readonly albumCameraRotation = new THREE.Quaternion();
     private readonly albumCameraProjection = new THREE.Matrix4();
-    private readonly albumButtons = new Map<string, HTMLButtonElement>();
+    private readonly objectButtons = new Map<string, HTMLButtonElement>();
     private lastOpenness = -1;
     private lastCaption: number | null = -1;
     @Input() set focusChapter(chapter: number | null) {
+        if (chapter === null && this.focusTarget && this.projectReturnId) this.projectRestorePending = true;
         this.focusTarget = chapter === null ? 0 : 1;
         if (chapter !== null) {
             this.detailChapter = chapter;
@@ -147,6 +173,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     }
     private detailChapter = 1;
     @Input() set readerChapter(chapter: number | null) {
+        if (chapter !== null) this.directViewPending = true;
         this.readerFramingTarget = chapter === null ? 0 : 1;
         this.readerOffsetTarget = chapter === 1 ? -.24 : .24;
         if (this.focusAmount < .001 || this.motion.matches) {
@@ -162,9 +189,14 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     private readerAnchors: Record<number, THREE.Vector3[]> = {};
     private readerLayouts: Record<number, { left: number; fov: number }> = {};
     private lastReaderPositions: Record<number, number> = {};
+    private directViewPending = false;
     private focusTarget = 0;
     private focusAmount = 0;
     private rendering?: StudioRendering;
+    private readonly performanceLog = isDevMode() && new URLSearchParams(location.search).has('studioProfile') ? new StudioPerformance() : undefined;
+    private readonly benchmark = isDevMode() && new URLSearchParams(location.search).has('studioBenchmark');
+    private readonly frameBudget = new StudioFrameBudget();
+    private movingLastFrame = false;
     // Borrowed from StudioRendering; that owner releases all render targets and the renderer.
     private renderer?: THREE.WebGLRenderer;
     private scene?: THREE.Scene;
@@ -226,6 +258,14 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         { t: 1, position: new THREE.Vector3(.1, 1.73, 2.85), target: new THREE.Vector3(-.6, 1.24, -1.6), fov: 61 },
     ];
     constructor(private readonly zone: NgZone) { }
+    activateProject(id: string, chapter: number, event: Event): void {
+        const button = this.objectButtons.get(id);
+        if (this.albumBlocked || this.focusTarget || this.selectedAlbum || !button || button.hidden || button.disabled) return;
+        this.projectReturnId = id;
+        this.projectRestorePending = false;
+        this.projectPointerActivation = event instanceof MouseEvent && event.detail > 0;
+        this.projectRequested.emit({ chapter, event });
+    }
     activateAlbum(id: string, event: Event): void {
         if (this.albumBlocked || this.focusTarget || this.selectedAlbum || !this.albumArt[id]) return;
         this.albumReturnId = id;
@@ -233,7 +273,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         this.albumRestorePending = false;
         this.albumRequested.emit({ id, event });
     }
-    clearAlbumPointerFocus(event: Event): void {
+    clearObjectPointerFocus(event: Event): void {
         (event.currentTarget as HTMLElement).classList.remove('pointer-focus-return');
     }
     activateAbout(event: Event): void {
@@ -249,7 +289,11 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     private initialize(): void {
         this.albumTriggerRefs.forEach(ref => {
             const id = ref.nativeElement.dataset['albumId'];
-            if (id) this.albumButtons.set(id, ref.nativeElement);
+            if (id) this.objectButtons.set(id, ref.nativeElement);
+        });
+        this.projectTriggerRefs.forEach(ref => {
+            const id = ref.nativeElement.dataset['projectId'];
+            if (id) this.objectButtons.set(id, ref.nativeElement);
         });
         try {
             this.rendering = new StudioRendering(this.canvasRef.nativeElement);
@@ -260,6 +304,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             return;
         }
         const renderer = this.renderer;
+        if (this.performanceLog) renderer.info.autoReset = false;
         this.smallScreen = window.innerWidth < 761;
         this.scene = new THREE.Scene();
         this.scene.background = this.cityFogColor.clone();
@@ -321,6 +366,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         this.exterior.add(city.group, street.group);
         const detailResources = [...workDetails.resources, ...musicCorner.resources, ...gamingDetails.resources, ...city.resources, ...street.resources];
         this.readerAnchors = furniture.readerAnchors;
+        this.projectTargets = furniture.projectTargets;
         this.albumArt = { ...room.albumArt, ...furniture.albumArt };
         this.scene.add(room.group, furniture.group, workDetails.group, musicCorner.group, gamingDetails.group, this.exterior);
         const floor = room.group.getObjectByName('Studio floor');
@@ -333,6 +379,12 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             [materials.fabric, { metres: .265 }],
             [plaster, { metres: 2.23 }],
         ]));
+        const movingRoots = new Set<THREE.Object3D>([room.door, furniture.record, room.aboutSign.parent!]);
+        const keep = new Set<THREE.Object3D>([
+            ...movingRoots, ...furniture.meters, furniture.portalScreen, furniture.stanleyScreen, ...Object.values(this.albumArt), ...Object.values(this.projectTargets).map(target => target.probe),
+        ]);
+        batchStaticStudio(room.group, keep);
+        batchStaticStudio(furniture.group, keep);
         this.reflectiveMaterials = [materials.wood, materials.walnut, materials.metal, materials.brass];
         if (floor instanceof THREE.Mesh) this.reflectiveMaterials.push(floorMaterial);
         this.scene.traverse(object => {
@@ -384,6 +436,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         // Only the relevant station plays; reduced motion retains a still frame.
         this.updateVideo();
         this.rendering.configurePostprocessing(this.scene, this.camera, this.smallScreen);
+        freezeStudioTransforms(this.scene, movingRoots);
         this.resizeObserver = new ResizeObserver(this.resize);
         this.resizeObserver.observe(this.canvasRef.nativeElement);
         window.addEventListener('scroll', this.onScroll, { passive: true });
@@ -451,7 +504,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         cancelAnimationFrame(this.frame);
         this.video?.pause();
         this.aboutTriggerRef.nativeElement.hidden = true;
-        this.hideAlbumTriggers();
+        this.hideObjectTriggers();
         this.zone.run(() => this.sceneUnavailable.emit());
     };
     /** A native button follows the sign's projection for mouse, touch and keyboard. */
@@ -512,16 +565,16 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             });
         }
     }
-    private hideAlbumTriggers(): void {
-        this.albumButtons.forEach(button => { if (!button.hidden) button.hidden = true; if (!button.disabled) button.disabled = true; });
+    private hideObjectTriggers(): void {
+        this.objectButtons.forEach(button => { if (!button.hidden) button.hidden = true; if (!button.disabled) button.disabled = true; });
         this.albumPoseValid = false;
     }
     /** Native hit targets follow the projected frames, never empty screen rectangles. */
-    private updateAlbumTriggers(now: number): void {
+    private updateObjectTriggers(now: number): void {
         if (!this.camera || this.albumBlocked || this.selectedAlbum || this.albumFocusAmount > .012 ||
             this.focusTarget || this.focusAmount > .012 || this.progress < .15 || this.camera.position.z > 4.1 ||
             this.canvasRef.nativeElement.closest('[inert]')) {
-            this.hideAlbumTriggers();
+            this.hideObjectTriggers();
             return;
         }
         const poseChanged = !this.albumPoseValid || this.camera.position.distanceToSquared(this.albumCameraPosition) > 1e-8 ||
@@ -529,9 +582,9 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             !this.camera.projectionMatrix.equals(this.albumCameraProjection);
         this.albumOcclusionDirty ||= poseChanged;
         const refreshOcclusion = this.albumOcclusionDirty && now - this.albumOcclusionTime >= 100;
-        // All record sleeves are static. A settled viewpoint needs no repeated
+        // Project faces and record sleeves are static. A settled viewpoint needs no repeated
         // raycasts or DOM writes; a pending visibility refresh still gets its turn.
-        if (!poseChanged && !refreshOcclusion && !this.albumRestorePending) return;
+        if (!poseChanged && !refreshOcclusion && !this.albumRestorePending && !this.projectRestorePending) return;
         const width = this.canvasRef.nativeElement.clientWidth, height = this.canvasRef.nativeElement.clientHeight;
         if (refreshOcclusion) {
             this.albumOcclusionTime = now;
@@ -539,8 +592,9 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             this.albumVisibility?.refreshMovingBounds();
         }
         this.camera.updateMatrixWorld();
-        for (const [id, button] of this.albumButtons) {
-            const art = this.albumArt[id], view = this.albumViews[id];
+        for (const [id, button] of this.objectButtons) {
+            const project = this.projectTargets[id];
+            const art = project?.probe ?? this.albumArt[id], view = project ?? this.albumViews[id];
             let visible = !!art && !!view;
             for (let parent: THREE.Object3D | null = art ?? null; parent; parent = parent.parent) visible &&= parent.visible;
             if (!visible || !view) { button.hidden = true; button.disabled = true; continue; }
@@ -579,9 +633,22 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         this.albumCameraRotation.copy(this.camera.quaternion);
         this.albumCameraProjection.copy(this.camera.projectionMatrix);
         this.albumPoseValid = true;
+        if (this.projectRestorePending && this.focusAmount < .001 && this.projectReturnId) {
+            const original = this.objectButtons.get(this.projectReturnId);
+            this.projectRestorePending = false;
+            this.projectReturnId = null;
+            const active = document.activeElement;
+            if (!active || active === document.body || active.closest('.project-explorer, .scene-project-trigger')) {
+                if (original && !original.hidden) {
+                    original.classList.toggle('pointer-focus-return', this.projectPointerActivation);
+                    original.addEventListener('blur', () => original.classList.remove('pointer-focus-return'), { once: true });
+                    original.focus({ preventScroll: true });
+                } else this.canvasRef.nativeElement.closest('.world-story')?.querySelector<HTMLButtonElement>('.chapter-rail button[aria-current="step"]')?.focus({ preventScroll: true });
+            }
+        }
         if (this.albumRestorePending && this.albumFocusAmount < .001 && this.albumReturnId) {
-            const original = this.albumButtons.get(this.albumReturnId);
-            const button = original && !original.hidden ? original : [...this.albumButtons.values()].find(item => !item.hidden);
+            const original = this.objectButtons.get(this.albumReturnId);
+            const button = original && !original.hidden ? original : [...this.objectButtons.values()].find(item => !item.hidden && !item.dataset['projectId']);
             this.albumRestorePending = false;
             this.albumReturnId = null;
             // A resize can put the original sleeve outside the view. Restore to a
@@ -614,6 +681,37 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         this.frame = 0;
         if (!this.renderer || !this.scene || !this.camera || this.disposed || this.hidden)
             return;
+        const detail = this.detailViews[this.detailChapter];
+        const album = this.selectedAlbum ? this.albumViews[this.selectedAlbum] : undefined;
+        // Apply after all Angular inputs arrive: a selected object opens at its
+        // final framing on the next frame, without traversing the scroll route.
+        if (this.directViewPending) {
+            this.directViewPending = false;
+            this.focusAmount = this.focusTarget;
+            this.detailPosition.copy(detail.position);
+            this.detailTarget.copy(detail.target);
+            this.detailFov = detail.fov;
+            this.readerOffset = this.readerOffsetTarget;
+            this.readerFraming = this.readerFramingTarget;
+            this.albumFocusAmount = this.albumFocusTarget;
+            if (album) {
+                this.albumPosition.copy(album.position);
+                this.albumTarget.copy(album.target);
+                this.albumFov = album.fov;
+            }
+        }
+        const moving = Math.abs(this.progress - this.targetProgress) > .00001 && this.albumRouteProgress === null ||
+            Math.abs(this.focusAmount - this.focusTarget) > .0001 ||
+            Math.abs(this.albumFocusAmount - this.albumFocusTarget) > .0001 || this.aboutAnimationProgress < 1 ||
+            this.focusTarget > 0 && (this.detailPosition.distanceToSquared(detail.position) > 1e-8 ||
+                this.detailTarget.distanceToSquared(detail.target) > 1e-8 ||
+                Math.abs(this.readerOffset - this.readerOffsetTarget) > .0001 || Math.abs(this.readerFraming - this.readerFramingTarget) > .0001) ||
+            !!album && this.albumPosition.distanceToSquared(album.position) > 1e-8;
+        if (!this.benchmark && !this.motion.matches && !this.frameBudget.shouldRender(now, moving)) { this.requestFrame(); return; }
+        const frameStarted = this.performanceLog ? performance.now() : 0;
+        if (this.performanceLog) this.renderer.info.reset();
+        if (!this.benchmark) this.rendering?.adapt(now - this.previousTime, moving && this.movingLastFrame, now, this.camera);
+        this.movingLastFrame = moving;
         const dt = Math.min((now - this.previousTime) / 1000, .05);
         this.previousTime = now;
         if (!this.motion.matches)
@@ -676,7 +774,6 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             this.readerOffset = this.motion.matches ? this.readerOffsetTarget : THREE.MathUtils.damp(this.readerOffset, this.readerOffsetTarget, 5.5, dt);
             this.readerFraming = this.motion.matches ? this.readerFramingTarget : THREE.MathUtils.damp(this.readerFraming, this.readerFramingTarget, 5.5, dt);
         }
-        const detail = this.detailViews[this.detailChapter];
         // Keep a continuous camera pose when moving directly between Index previews.
         const detailBlend = this.motion.matches ? 1 : 1 - Math.exp(-5.5 * dt);
         this.detailPosition.lerp(detail.position, detailBlend);
@@ -729,7 +826,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             this.door.rotation.y = opening * 1.51;
             this.renderer.shadowMap.needsUpdate = true;
         }
-        this.updateAlbumTriggers(now);
+        this.updateObjectTriggers(now);
         if (!this.albumFocusTarget && this.albumFocusAmount < .001) this.albumRouteProgress = null;
         if (this.record)
             this.record.rotation.y = this.elapsed * .68;
@@ -740,8 +837,11 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         });
         this.updateVideo();
         this.rendering?.render(this.scene, this.camera, this.smallScreen, dt);
-        if (!this.motion.matches)
+        this.performanceLog?.record(now, performance.now() - frameStarted, this.renderer, this.progress, this.rendering!.quality.level);
+        // Exterior has no perpetual animation. Inside, the platter and meters run at 30 fps when settled.
+        if (!this.motion.matches && (this.benchmark || moving || p > .14))
             this.requestFrame();
+        else if (!this.motion.matches) this.performanceLog?.idle();
     };
     ngOnDestroy(): void {
         this.disposed = true;
@@ -751,7 +851,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         document.removeEventListener('visibilitychange', this.onVisibility);
         this.motion.removeEventListener('change', this.onMotionChange);
         this.canvasRef.nativeElement.removeEventListener('webglcontextlost', this.onContextLost);
-        this.albumButtons.clear();
+        this.objectButtons.clear();
         this.albumOcclusion.clear();
         this.albumVisibility = undefined;
         this.video?.pause();

@@ -341,7 +341,7 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
     this.changeDetector.detectChanges();
     // Restoring scroll after a resize can defer the browser's focus update until layout.
     requestAnimationFrame(() => {
-      if (!this.detailProject() && !this.detailAlbum() && !this.indexOpen() && trigger?.isConnected) trigger.focus({ preventScroll: true });
+      if (!this.detailProject() && !this.detailAlbum() && !this.indexOpen() && trigger?.isConnected && !trigger.classList.contains('scene-project-trigger')) trigger.focus({ preventScroll: true });
     });
   }
 

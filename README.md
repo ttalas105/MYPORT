@@ -24,6 +24,7 @@ Open `http://localhost:4200/`. Angular's development server reloads source chang
 | `studio/studio-room.ts`, `studio-furniture.ts`, detail builders | Physical geometry, materials, authored screen textures and resource ownership. |
 | `studio/studio-geometry.ts`, `studio-surfaces.ts` | Dimensionally correct rounded boxes and material UV scaling. |
 | `studio/studio-lighting.ts`, `studio-rendering.ts` | Lighting, environment capture and post-processing setup. |
+| `studio/studio-batching.ts`, `studio-quality.ts` | Spatial batching, static transforms, adaptive canvas quality and render pacing. |
 | `studio/studio-audio.service.ts` | Page-scoped music preferences, observable playback state and browser event lifecycle. |
 | `studio/studio-audio.ts` | Native media playback, Web Audio doorway filtering and resource disposal, independent of Angular. |
 | `studio/studio-music.component.*` | Presentation and user controls for the audio service. |
@@ -39,7 +40,7 @@ Static assets are served from `public/`. See [the asset inventory](public/ASSETS
 ## Validation
 
 ```bash
-npm test       # Native audio and Angular service behavior checks using deterministic mocks
+npm test       # Audio, service, quality, render pacing and static geometry checks
 npm run typecheck
 npm run build  # Angular production compilation and bundle/style budgets
 npm run check  # All three in sequence
@@ -52,3 +53,13 @@ TypeScript strict checks also reject unused locals and parameters, keeping obsol
 These checks do not render WebGL or emulate a browser's autoplay policy. Verify camera framing, keyboard focus, narrow layouts and actual audio playback in a browser after changes to those behaviors.
 
 Production output is `dist/portfolio/browser`. Public asset URLs assume the application is hosted at the domain root. Serve that directory with a static host after a successful build.
+
+## Rendering performance
+
+Static room and furniture parts are combined by material, shadow settings and two-metre spatial cells after UV mapping. Door/neon/platter animation and album/screen targets keep their identities. Fixed transforms are frozen; moving branches remain live.
+
+Camera movement renders at up to 60 fps, settled interior ambience at 30 fps. The still exterior stops scheduling frames until input, resize or assets require one. Reduced motion continues to render on demand.
+
+Canvas quality starts high on unconstrained desktops and balanced on phones or devices reporting at most four CPU threads or 4GB of memory. High uses half-resolution ambient occlusion and SMAA; balanced skips ambient occlusion; low uses direct canvas MSAA. Pixel-ratio caps are 1.5 / 1.25 / 1, with 3M / 2M / 1.25M pixel targets and a 0.5 resolution floor for very large displays. HTML stays at native resolution. A median above 24ms over 60 moving frames lowers quality, with a four-second cooldown and no automatic upgrades during that visit. Isolated stalls and deliberate idle pacing do not lower quality. Only high desktop quality performs the optional one-time room reflection capture.
+
+For local measurement, open `http://127.0.0.1:4200/?studioProfile=1`. The console reports five-second active samples: frame cadence, CPU submission time, aggregate draw calls/triangles, canvas pixels and allocated geometry/texture counts. It also reports when the exterior becomes idle. Add `&studioBenchmark=1` for an uncapped comparison with adaptive changes disabled. Both diagnostic flags are ignored in production; no telemetry is sent. CPU submission time is not a GPU timer, and results on one machine do not establish performance on other hardware.

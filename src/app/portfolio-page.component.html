@@ -23,6 +23,7 @@
         [albumInteractionsBlocked]="indexOpen() || detailProject() !== null || aboutOpen()"
         (readerPositionsChanged)="readerPositions.set($event)"
         (albumRequested)="openAlbum($event)"
+        (projectRequested)="openProject($event.chapter, $event.event)"
         (albumReaderLeftChanged)="albumReaderLeft.set($event)"
         (aboutRequested)="openAbout($event)"
         (captionChanged)="captionChapter.set($event)"
@@ -119,7 +120,7 @@
 @if (detailProject(); as project) {
   <div class="project-explorer" [class.project-explorer--left]="project.id === 'stanley'" [style.--project-reader-left]="readerPositions()[project.chapter] !== undefined ? readerPositions()[project.chapter] + 'px' : null">
     <button class="project-dismiss" type="button" tabindex="-1" aria-hidden="true" (click)="closeProject()"></button>
-    <section #projectDialog class="project-reader" role="dialog" aria-modal="true" aria-labelledby="project-detail-title">
+    <section #projectDialog id="project-reader" class="project-reader" role="dialog" aria-modal="true" aria-labelledby="project-detail-title">
       <div class="project-reader-toolbar">
         <h2 id="project-detail-title">{{ project.title }}</h2>
         <button type="button" (click)="closeProject()" aria-label="Back to studio"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" /></svg></button>

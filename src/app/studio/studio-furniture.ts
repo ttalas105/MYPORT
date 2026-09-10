@@ -13,6 +13,13 @@ export interface StudioMaterials {
   paper: THREE.MeshStandardMaterial;
 }
 
+export interface StudioProjectTarget {
+  probe: THREE.Mesh;
+  anchors: THREE.Vector3[];
+  target: THREE.Vector3;
+  normal: THREE.Vector3;
+}
+
 /** Human-scale furniture: edges catch light, surfaces support their objects, and cables go somewhere. */
 export function buildStudioFurniture(
   materials: StudioMaterials,
@@ -24,6 +31,7 @@ export function buildStudioFurniture(
   portalScreen: THREE.Mesh;
   stanleyScreen: THREE.Mesh;
   readerAnchors: Record<number, THREE.Vector3[]>;
+  projectTargets: Record<string, StudioProjectTarget>;
   albumArt: Record<string, THREE.Mesh>;
   resources: THREE.Texture[];
 } {
@@ -32,6 +40,7 @@ export function buildStudioFurniture(
   const meters: THREE.Mesh[] = [];
   const readerAnchors: Record<number, THREE.Vector3[]> = {};
   const albumArt: Record<string, THREE.Mesh> = {};
+  const projectTargets: Record<string, StudioProjectTarget> = {};
   const { wood, walnut, fabric, metal, rubber, brass, paper } = materials;
   const charcoal = new THREE.MeshStandardMaterial({ color: '#242528', roughness: 0.67, metalness: 0.12 });
   const keyMaterial = new THREE.MeshStandardMaterial({ color: '#a9a497', roughness: 0.78 });
@@ -56,6 +65,20 @@ export function buildStudioFurniture(
       }
     }
     return corners;
+  }
+
+  // Capture the front outline before static batching removes individual housings.
+  function projectTarget(id: string, probe: THREE.Mesh, housing: THREE.Object3D, bounds: THREE.Box3): void {
+    housing.updateWorldMatrix(true, false);
+    probe.updateWorldMatrix(true, false);
+    projectTargets[id] = {
+      probe,
+      anchors: [[bounds.min.x, bounds.min.y], [bounds.min.x, bounds.max.y],
+        [bounds.max.x, bounds.min.y], [bounds.max.x, bounds.max.y]].map(([x, y]) =>
+          new THREE.Vector3(x, y, bounds.max.z).applyMatrix4(housing.matrixWorld)),
+      target: probe.getWorldPosition(new THREE.Vector3()),
+      normal: new THREE.Vector3(0, 0, 1).applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(housing.matrixWorld)),
+    };
   }
 
   function housingCorners(mesh: THREE.Mesh): THREE.Vector3[] {
@@ -394,6 +417,7 @@ export function buildStudioFurniture(
     const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.232, 0.693), new THREE.MeshBasicMaterial({ map, toneMapped: false }));
     screen.position.set(0, 0.469, 0.0355);
     assembly.add(screen);
+    projectTarget(`project-${chapter}`, screen, back, back.geometry.boundingBox!);
     cylinder(assembly, 0.0028, 0.002, 0.588, 0.103, 0.036, amber, 8).rotation.x = Math.PI / 2;
     line(assembly, [[0, 0.32, -0.073], [0.03, 0.12, -0.14], [0.13, -0.045, -0.22], [0.12, -0.16, -0.21]], rubber, 0.005);
     return screen;
@@ -566,6 +590,7 @@ export function buildStudioFurniture(
   box(rack, 0.66, 0.055, 0.62, 0, 0.057, 0, walnut);
   box(rack, 0.575, 1.16, 0.03, 0, 0.645, -0.279, charcoal);
   for (const x of [-0.26, 0.26]) box(rack, 0.017, 1.125, 0.04, x, 0.65, 0.268, metal, 0.003);
+  let okraLabel!: THREE.Mesh;
   for (let unit = 0; unit < 5; unit++) {
     const y = 1.103 - unit * 0.216;
     box(rack, 0.55, 0.204, 0.47, 0, y, 0.009, charcoal, 0.009);
@@ -575,7 +600,7 @@ export function buildStudioFurniture(
       cylinder(rack, 0.005, 0.004, x, y - 0.071, 0.261, paleMetal, 8).rotation.x = Math.PI / 2;
     }
     if (unit === 0) {
-      label(rack, 'OKRA', 0.225, 0.056, -0.10, y + 0.028, 0.261, '#e0d4ba', '#1f2425');
+      okraLabel = label(rack, 'OKRA', 0.225, 0.056, -0.10, y + 0.028, 0.261, '#e0d4ba', '#1f2425');
       label(rack, 'Scheduled · traceable', 0.225, 0.035, -0.10, y - 0.038, 0.261, '#939d93', '#1f2425');
       dial(rack, .174, y, .274, .032, -.55);
     } else {
@@ -605,7 +630,8 @@ export function buildStudioFurniture(
     rackBounds.union(object.geometry.boundingBox!.clone().applyMatrix4(toRack));
   });
   readerAnchors[2] = worldBoxCorners(rack, rackBounds);
-  batchAssembly(rack, new Set(meters));
+  projectTarget('project-2', okraLabel, rack, rackBounds);
+  batchAssembly(rack, new Set([...meters, okraLabel]));
 
   // Vinyl console. The turntable's rotating group contains only the platter and record.
   const consoleGroup = new THREE.Group();
@@ -926,5 +952,7 @@ export function buildStudioFurniture(
   throwCushion.rotation.set(-0.20, 0.10, -0.13);
   batchAssembly(lounge);
 
-  return { group, record, meters, portalScreen, stanleyScreen, readerAnchors, albumArt, resources };
+  projectTarget('project-4', tapiLaptopDisplay, tapiLidHousing, tapiLidHousing.geometry.boundingBox!);
+  projectTarget('project-4-evidence', evidenceDisplay, evidenceHousing, evidenceHousing.geometry.boundingBox!);
+  return { group, record, meters, portalScreen, stanleyScreen, readerAnchors, projectTargets, albumArt, resources };
 }
