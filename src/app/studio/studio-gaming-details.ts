@@ -6,17 +6,13 @@ import type { StudioMaterials } from './studio-furniture';
 /** Quiet, real-scale gaming hardware shares the workroom without becoming another screen. */
 export function buildStudioGamingDetails(m: StudioMaterials): { group: THREE.Group; resources: THREE.Texture[] } {
   const group = new THREE.Group();
-  group.name = 'Gaming hardware and lounge shelf';
+  group.name = 'Gaming PC hardware';
   const resources: THREE.Texture[] = [];
   const shell = new THREE.MeshStandardMaterial({ color: '#24272a', roughness: .62, metalness: .18 });
   const plastic = new THREE.MeshStandardMaterial({ color: '#393c3e', roughness: .72 });
   const silver = new THREE.MeshStandardMaterial({ color: '#929698', roughness: .36, metalness: .85 });
   const board = new THREE.MeshStandardMaterial({ color: '#303a34', roughness: .75, metalness: .1 });
-  const ivory = new THREE.MeshStandardMaterial({ color: '#c3bfae', roughness: .69 });
-  const clay = new THREE.MeshStandardMaterial({ color: '#916657', roughness: .79 });
-  const sage = new THREE.MeshStandardMaterial({ color: '#6c776d', roughness: .84 });
   const violet = new THREE.MeshStandardMaterial({ color: '#a899bd', emissive: '#9a81b9', emissiveIntensity: .55, roughness: .45 });
-  const darkGlass = new THREE.MeshPhysicalMaterial({ color: '#172024', roughness: .2, metalness: .05, clearcoat: .6, clearcoatRoughness: .14 });
   const sideGlass = new THREE.MeshPhysicalMaterial({ color: '#a4b1b3', roughness: .14, metalness: .05,
     transparent: true, opacity: .16, depthWrite: false, clearcoat: .65, clearcoatRoughness: .12, side: THREE.DoubleSide });
 
@@ -131,129 +127,10 @@ export function buildStudioGamingDetails(m: StudioMaterials): { group: THREE.Gro
     [-.28, .017, -.30], [-.36, .12, -.23], [-.39, .39, -.115], [-.40, .67, -.10], [-.565, .708, -.12]], .0032, m.rubber, 48);
   box(tower, [.025, .038, .011], [.05, .147, -.239], m.rubber, .002);
 
-  const controller = (parent: THREE.Object3D, position: [number, number, number], yaw = 0) => {
-    const pad = new THREE.Group();
-    pad.name = 'Dual-stick game controller';
-    pad.position.fromArray(position);
-    pad.rotation.y = yaw;
-    parent.add(pad);
-    const outline = new THREE.Shape();
-    outline.moveTo(-.049, .041);
-    outline.bezierCurveTo(-.067, .046, -.077, .027, -.078, .008);
-    outline.bezierCurveTo(-.083, -.010, -.090, -.045, -.069, -.053);
-    outline.bezierCurveTo(-.056, -.057, -.048, -.027, -.035, -.021);
-    outline.quadraticCurveTo(0, -.029, .035, -.021);
-    outline.bezierCurveTo(.048, -.027, .056, -.057, .069, -.053);
-    outline.bezierCurveTo(.090, -.045, .083, -.010, .078, .008);
-    outline.bezierCurveTo(.077, .027, .067, .046, .049, .041);
-    outline.quadraticCurveTo(0, .050, -.049, .041);
-    const body = new THREE.Mesh(new THREE.ExtrudeGeometry(outline, { depth: .024, bevelEnabled: true,
-      bevelThickness: .004, bevelSize: .003, bevelSegments: 2, curveSegments: 8 }), plastic);
-    body.rotation.x = -Math.PI / 2;
-    body.castShadow = body.receiveShadow = true;
-    pad.add(body);
-    for (const [x, z] of [[-.045, -.010], [.023, .010]]) {
-      cylinder(pad, .014, .003, [x, .029, z], m.rubber, 24);
-      cylinder(pad, .006, .009, [x, .033, z], shell);
-      cylinder(pad, .011, .004, [x, .039, z], m.rubber, 24);
-    }
-    box(pad, [.023, .006, .007], [-.025, .031, .018], shell, .001);
-    box(pad, [.007, .006, .023], [-.025, .031, .018], shell, .001);
-    for (const [x, z, material] of [[.052, -.027, sage], [.062, -.017, clay], [.052, -.007, ivory], [.042, -.017, silver]] as const) {
-      cylinder(pad, .004, .006, [x, .032, z], material, 14);
-    }
-    box(pad, [.041, .002, .023], [0, .029, -.025], shell, .003);
-    cylinder(pad, .0036, .002, [0, .030, .004], silver);
-    for (const x of [-.047, .047]) box(pad, [.037, .012, .010], [x, .023, -.043], m.rubber, .004);
-    return pad;
-  };
-
-  // This table is beyond the chair's rear corner, clear of the lamp's base and shade.
-  const table = new THREE.Group();
-  table.name = 'Walnut lounge controller table';
-  table.position.set(3.77, 0, 2.98);
-  group.add(table);
-  box(table, [.55, .035, .46], [0, .5725, 0], m.walnut, .012);
-  for (const x of [-.215, .215]) for (const z of [-.165, .165]) {
-    box(table, [.028, .546, .028], [x, .28, z], m.walnut, .004);
-    box(table, [.03, .014, .03], [x, .007, z], m.rubber, .004);
-  }
-  box(table, [.46, .024, .36], [0, .182, 0], m.walnut, .007);
-  const travelCase = box(table, [.294, .059, .159], [-.035, .224, .005], m.fabric, .019);
-  travelCase.rotation.y = .12;
-  tube(travelCase, [[-.134, .003, -.078], [.134, .003, -.078], [.146, .003, -.066], [.146, .003, .066],
-    [.134, .003, .078], [-.134, .003, .078], [-.146, .003, .066], [-.146, .003, -.066], [-.134, .003, -.078]], .0012, m.rubber, 48);
-  tube(travelCase, [[-.037, 0, .081], [-.036, 0, .104], [.036, 0, .104], [.037, 0, .081]], .004, m.rubber, 16);
-  controller(table, [.068, .594, .103], -.23);
-  const handheld = new THREE.Group();
-  handheld.name = 'Handheld console with sleeping display';
-  handheld.position.set(-.018, .603, -.112);
-  handheld.rotation.y = .08;
-  table.add(handheld);
-  box(handheld, [.245, .021, .102], [0, 0, 0], shell, .012);
-  for (const x of [-.106, .106]) box(handheld, [.034, .024, .102], [x, 0, 0], plastic, .012);
-  box(handheld, [.157, .0015, .085], [0, .0117, 0], darkGlass, .004);
-  for (const [x, z] of [[-.103, -.023], [.103, .023]]) {
-    cylinder(handheld, .0095, .004, [x, .013, z], m.rubber, 20);
-    cylinder(handheld, .007, .003, [x, .017, z], plastic, 20);
-  }
-  box(handheld, [.019, .004, .006], [-.103, .014, .021], m.rubber, .001);
-  box(handheld, [.006, .004, .019], [-.103, .014, .021], m.rubber, .001);
-  for (const [x, z] of [[.103, -.036], [.113, -.026], [.103, -.016], [.093, -.026]]) cylinder(handheld, .003, .004, [x, .014, z], ivory, 12);
-  for (const x of [-.078, .078]) {
-    cylinder(handheld, .002, .001, [x, .013, -.038], silver, 10);
-    for (let i = 0; i < 3; i++) box(handheld, [.007, .001, .0015], [x, .013, .023 + i * .005], m.rubber, .0005);
-  }
-
-  // Local shelf faces into the room (local +Z is world -X). The wall remains
-  // visible between the books and their restrained metal bookends.
-  const shelf = new THREE.Group();
-  shelf.name = 'Right wall books and game cases';
-  shelf.position.set(4.22, 2.05, 1.25);
-  shelf.rotation.y = -Math.PI / 2;
-  group.add(shelf);
-  box(shelf, [.86, .034, .238], [0, 0, .079], m.walnut, .008);
-  for (const x of [-.30, .30]) {
-    box(shelf, [.019, .162, .021], [x, -.09, -.028], m.metal, .003);
-    box(shelf, [.019, .018, .178], [x, -.035, .055], m.metal, .003);
-    for (const y of [-.153, -.045]) frontDisc(shelf, .004, .002, [x, y, -.015], m.brass);
-  }
-  const books = [
-    { width: .038, height: .258, depth: .17, material: sage },
-    { width: .050, height: .236, depth: .165, material: clay },
-    { width: .033, height: .278, depth: .178, material: ivory },
-    { width: .025, height: .228, depth: .16, material: shell },
-  ];
-  let bookX = -.284;
-  for (const book of books) {
-    const center = bookX + book.width / 2;
-    box(shelf, [book.width, book.height, book.depth], [center, .017 + book.height / 2, .08], book.material, .002);
-    // Recessed page block and small unprinted spine bands distinguish bound books.
-    box(shelf, [book.width - .007, book.height - .010, .001], [center, .017 + book.height / 2, .08 - book.depth / 2 - .0008], m.paper, .0005);
-    for (const y of [.056, book.height - .027]) box(shelf, [book.width - .012, .002, .001], [center, y, .081 + book.depth / 2], m.brass, .0005);
-    bookX += book.width + .004;
-  }
-  for (const x of [-.301, -.115]) {
-    box(shelf, [.004, .127, .132], [x, .081, .08], m.metal, .001);
-    box(shelf, [.032, .004, .132], [x + (x < -.2 ? .014 : -.014), .020, .08], m.metal, .001);
-  }
-  for (let i = 0; i < 3; i++) {
-    const game = box(shelf, [.017, .172, .133], [-.033 + i * .022, .104, .086], i === 1 ? sage : shell, .002);
-    box(game, [.012, .143, .001], [0, 0, .067], i === 1 ? ivory : clay, .0005);
-    box(game, [.014, .012, .001], [0, .074, .067], silver, .0005);
-  }
-  const stand = new THREE.Group();
-  stand.position.set(.257, .022, .105);
-  shelf.add(stand);
-  box(stand, [.18, .008, .116], [0, 0, 0], shell, .009);
-  for (const x of [-.051, .051]) tube(stand, [[x, .004, -.028], [x, .068, -.028], [x, .071, .021], [x, .079, .036]], .006, m.metal, 16);
-  const spare = controller(stand, [0, .078, .005], 0);
-  spare.rotation.x = -.34;
-
   // Keep authored wood/fabric face charts for the global texture mapping pass.
   // Opaque hardware is fixed, so merge by material and shadow state per assembly.
   const unbatched = new Set<THREE.Material>([m.wood, m.walnut, m.fabric, sideGlass]);
-  for (const assembly of [tower, table, shelf]) {
+  for (const assembly of [tower]) {
     assembly.updateWorldMatrix(true, true);
     const inverse = assembly.matrixWorld.clone().invert();
     const batches = new Map<string, { material: THREE.Material; cast: boolean; receive: boolean; originals: THREE.Mesh[]; parts: THREE.BufferGeometry[] }>();

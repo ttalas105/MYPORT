@@ -10,8 +10,10 @@ This directory contains the assets used by the active studio portfolio. Unused a
 | `fonts/funnel-display-latin.woff2` | Display typeface; [bundled OFL license](fonts/funnel-display-OFL.txt). |
 | `fonts/hubot-sans-condensed-extrabold.woff2` | Condensed display typeface; [bundled OFL license](fonts/hubot-sans-OFL.txt). |
 | Seven JPEG covers in `room/` | Requested wall and console album collection; [identities, sources and attribution](room/ALBUMS.md). |
+| Three game icons and two rank badges in `room/ranks/` | Brawlhalla, VALORANT Diamond and Rainbow Six Platinum for the current ranks sign; [sources](room/ranks/SOURCES.md). |
 | Twelve texture and HDR files in `studio-assets/` | Poly Haven photographic material maps and environment lighting; [CC0 sources and checksums](studio-assets/ASSETS.md), including [walnut veneer details](studio-assets/wood-veneer/SOURCE.md). |
 | `studio-assets/audio/turkish-cotton-instrumental.m4a` | Local studio soundtrack; [source and file provenance](studio-assets/audio/SOURCE.md). |
 | `tapmango-dashboard-poster.jpg`, `tapmango-dashboard.mp4` | Portal interface walkthrough video and its loading poster. Retained from the existing portfolio. |
+| External YouTube embed; no local video file | Wall television: official Crunchyroll [Thorfinn vs Snake — VINLAND SAGA SEASON 2](https://www.youtube.com/watch?v=l3zQNgXdmj0), embedded directly from youtube-nocookie.com through the YouTube IFrame API. Muted continuous loop; no downloaded or rehosted copy. Original baked-in Crunchyroll/copyright marks remain. No ownership or CC0 claim. |
 
-Licenses are asset-specific. The Poly Haven CC0 statement applies only to its listed textures and HDR; it does not cover album artwork, the soundtrack or product imagery.
+Licenses are asset-specific. The Poly Haven CC0 statement applies only to its listed textures and HDR; it does not cover album artwork, the soundtrack, product imagery or the external television clip.

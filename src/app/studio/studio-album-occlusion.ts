@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 interface Occluder {
+  root: THREE.Object3D;
   mesh: THREE.Mesh;
   bounds: THREE.Box3;
   dynamic: boolean;
@@ -25,20 +26,20 @@ export class StudioAlbumOcclusion {
         if (!materials.some(material => this.blocks(material))) return;
         // Mesh.raycast uses this local box before testing triangles as well.
         if (!object.geometry.boundingBox) object.geometry.computeBoundingBox();
-        const entry = { mesh: object, bounds: new THREE.Box3(), dynamic: moving.has(object) };
+        const entry = { root, mesh: object, bounds: new THREE.Box3(), dynamic: moving.has(object) };
         this.updateBounds(entry);
         this.occluders.push(entry);
       });
     });
   }
 
-  /** Only the door and platter move; static furniture never needs re-indexing. */
+  /** Only registered moving parts need fresh bounds; static furniture stays indexed. */
   refreshMovingBounds(): void {
     this.movingRoots.forEach(root => root.updateWorldMatrix(true, true));
     this.occluders.forEach(entry => { if (entry.dynamic) this.updateBounds(entry); });
   }
 
-  isUnoccluded(art: THREE.Mesh, center: THREE.Vector3, cameraPosition: THREE.Vector3): boolean {
+  isUnoccluded(art: THREE.Mesh, center: THREE.Vector3, cameraPosition: THREE.Vector3, maskedRoot?: THREE.Object3D): boolean {
     if (!this.isVisible(art)) return false;
     const distance = this.direction.subVectors(center, cameraPosition).length();
     this.raycaster.set(cameraPosition, this.direction.normalize());
@@ -52,6 +53,7 @@ export class StudioAlbumOcclusion {
     this.raycaster.far = artDistance;
 
     for (const entry of this.occluders) {
+      if (entry.root === maskedRoot) continue;
       const mesh = entry.mesh;
       if (mesh === art || !this.isVisible(mesh)) continue;
       // A ray starting inside a bounds box must still check its contents.

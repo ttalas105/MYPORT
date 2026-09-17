@@ -45,7 +45,7 @@
 * { box-sizing: border-box; }
 html { background: var(--room-black); scroll-behavior: auto; scrollbar-gutter: stable; }
 body { margin: 0; min-width: 320px; color: var(--room-ink); background: var(--room-black); overflow-x: clip; }
-body:has(.index-layer.is-open), body:has(.project-explorer), body:has(.about-overlay) { overflow: hidden; }
+body:has(.index-layer.is-open), body:has(.project-explorer), body:has(.about-overlay), body:has(.quick-project-overlay) { overflow: hidden; }
 button, a { color: inherit; font: inherit; cursor: pointer; }
 button { padding: 0; border: 0; background: none; }
 a { text-decoration: none; }

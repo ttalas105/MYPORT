@@ -59,7 +59,7 @@ export function batchStaticStudio(root: THREE.Group, keep: ReadonlySet<THREE.Obj
   retired.forEach(geometry => geometry.dispose());
 }
 
-/** Static transforms are authored once; only the door, platter and neon update each frame. */
+/** Static transforms are authored once; authored moving roots keep their own updates. */
 export function freezeStudioTransforms(scene: THREE.Scene, moving: ReadonlySet<THREE.Object3D>): void {
   scene.updateMatrixWorld(true);
   const freeze = (object: THREE.Object3D): void => {

@@ -16,12 +16,27 @@ function load(name, dependencies = {}) {
   return exports;
 }
 const { StudioQuality, StudioFrameBudget, studioPixelRatio } = load('studio-quality');
+const { STUDIO_STOPS, studioCaptionAt, studioProgressFromScroll, studioScrollFromProgress } = load('studio-route');
 const { batchStaticStudio, freezeStudioTransforms } = load('studio-batching', {
   three: THREE, 'three/examples/jsm/utils/BufferGeometryUtils.js': geometryUtils,
 });
 let passed = 0;
 function check(name, run) { run(); passed++; console.log(`PASS ${name}`); }
 const near = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-5, `${actual} ≈ ${expected}`);
+
+check('extended scroll routes remain reversible and every destination has its own caption', () => {
+  let previous = -1;
+  for (let i = 0; i <= 1000; i++) {
+    const scene = i / 1000;
+    const scroll = studioScrollFromProgress(scene);
+    assert.ok(scroll > previous, 'Scroll order must remain monotonic');
+    near(studioProgressFromScroll(scroll), scene);
+    previous = scroll;
+  }
+  near(studioScrollFromProgress(0), 0);
+  near(studioScrollFromProgress(1), 1);
+  STUDIO_STOPS.forEach((stop, chapter) => assert.equal(studioCaptionAt(stop), chapter));
+});
 
 check('quality adapts to sustained slow movement, not idle cadence or isolated stalls', () => {
   const quality = new StudioQuality(false);

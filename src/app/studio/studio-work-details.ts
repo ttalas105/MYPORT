@@ -70,12 +70,22 @@ export function buildStudioWorkDetails(m: StudioMaterials): { group: THREE.Group
     const screw = cylinder(mic, .011, .046, point, silver, 12);
     screw.rotation.z = Math.PI / 2;
   }
-  rod(mic, [.16, .95, .13], [.16, .83, .13], .010, graphite);
+  const micJoint = [.16, .83, .13];
+  rod(mic, joints[2], micJoint, .010, graphite);
   const microphone = new THREE.Group();
   microphone.position.set(.16, .75, .13);
   microphone.rotation.x = -.22;
   mic.add(microphone);
   cylinder(microphone, .028, .12, [0, 0, 0], graphite, 32);
+  // Join the vertical stem to the tilted housing with a solid swivel and collar.
+  const connector = new THREE.Group();
+  connector.name = 'Microphone swivel connector';
+  mic.add(connector);
+  const socket = new THREE.Vector3(0, .056, 0).applyEuler(microphone.rotation).add(microphone.position);
+  rod(connector, micJoint, socket.toArray(), .013, graphite);
+  cylinder(connector, .018, .034, micJoint, graphite, 24).rotation.z = Math.PI / 2;
+  cylinder(connector, .008, .038, micJoint, silver, 16).rotation.z = Math.PI / 2;
+  cylinder(microphone, .032, .024, [0, .054, 0], graphite, 28);
   const windscreen = new THREE.Mesh(new THREE.CapsuleGeometry(.034, .076, 6, 20), m.rubber);
   windscreen.position.y = -.085;
   windscreen.castShadow = true;
@@ -123,32 +133,6 @@ export function buildStudioWorkDetails(m: StudioMaterials): { group: THREE.Group
   notebook.add(notesPage);
   rod(notebook, [.085, .020, -.075], [.116, .020, .075], .0035, terracotta);
   rod(notebook, [.116, .020, .075], [.119, .020, .090], .002, graphite);
-
-  // A shallow reference shelf occupies the strip above the desk's acoustic panels.
-  const shelf = new THREE.Group();
-  shelf.name = 'Reference books above the workstation';
-  shelf.position.set(-1.15, 2.94, -3.81);
-  group.add(shelf);
-  box(shelf, [1.72, .035, .28], [0, 0, 0], m.walnut, .007);
-  for (const x of [-.62, .62]) {
-    box(shelf, [.023, .17, .026], [x, -.075, -.125], graphite);
-    rod(shelf, [x, -.15, -.115], [x, -.015, .09], .009, graphite);
-  }
-  let bookX = -.65;
-  for (let i = 0; i < 10; i++) {
-    const width = .034 + (i % 3) * .012, height = .18 + (i % 4) * .020;
-    const cover = [olive, terracotta, linen, graphite][i % 4];
-    box(shelf, [width, height, .159], [bookX, .018 + height / 2, -.022], cover, .001);
-    box(shelf, [width - .005, height - .012, .144], [bookX, .018 + height / 2, -.028], m.paper, .001);
-    for (const y of [.057, .064]) box(shelf, [width * .62, .002, .001], [bookX, y, .059], linen, .0004);
-    bookX += width + .006;
-  }
-  for (let i = 0; i < 3; i++) {
-    box(shelf, [.25 - i * .013, .029, .185], [.31 + i * .015, .034 + i * .031, -.012], [terracotta, graphite, olive][i], .002);
-    box(shelf, [.24 - i * .013, .021, .17], [.31 + i * .015, .034 + i * .031, -.009], m.paper, .001);
-  }
-  box(shelf, [.036, .138, .17], [-.715, .084, -.015], graphite);
-  box(shelf, [.15, .012, .18], [-.66, .024, -.015], graphite);
 
   // Compact combo amp beside the record console: woven grille, piping and inset controls.
   const amp = new THREE.Group();
