@@ -382,7 +382,7 @@ export function buildStudioFurniture(
     context.fillText('LLM Driven Video Generator', 320, 168);
     context.fillStyle = '#aaa1ae';
     context.font = '26px Arial';
-    context.fillText('Research, ideas, scripts, and thumbnails.', 320, 220);
+    context.fillText('Research, titles, scripts, and thumbnails.', 320, 220);
     context.strokeStyle = '#3b353f'; context.lineWidth = 2;
     context.strokeRect(320, 268, 1130, 80);
     context.fillStyle = '#908693'; context.font = '25px Arial';
@@ -776,8 +776,8 @@ export function buildStudioFurniture(
   cylinder(tapiLid, 0.0018, 0.002, 0, 0.293, 0.0075, rubber, 8).rotation.x = Math.PI / 2;
   const tapiConversation = canvasTexture(1440, 900, context => {
     context.fillStyle = '#eeece4'; context.fillRect(0, 0, 1440, 900);
-    context.fillStyle = '#272a28'; context.font = '600 74px Arial'; context.fillText('Tapi', 76, 112);
-    context.fillStyle = '#575e56'; context.font = '28px Arial'; context.fillText('TapMango AI', 232, 106);
+    context.fillStyle = '#272a28'; context.font = '600 74px Arial'; context.fillText('TAPI', 76, 112);
+    context.fillStyle = '#575e56'; context.font = '28px Arial'; context.fillText('TapMango AI', 280, 106);
     context.font = '26px Arial'; context.textAlign = 'right'; context.fillText('Illustrative conversation', 1364, 103); context.textAlign = 'left';
     context.strokeStyle = '#cacdc2'; context.lineWidth = 2; context.beginPath(); context.moveTo(76, 151); context.lineTo(1364, 151); context.stroke();
     context.fillStyle = '#dedfd5'; context.fillRect(430, 204, 934, 160);
@@ -825,7 +825,7 @@ export function buildStudioFurniture(
     context.strokeStyle = '#576257'; context.beginPath(); context.moveTo(70, 1036); context.lineTo(830, 1036); context.stroke();
     context.fillStyle = '#d0d7c6'; context.font = '33px Arial'; context.fillText('Sources inform the answer.', 70, 1140);
     context.fillText('New reports need approval.', 70, 1192);
-    context.fillStyle = '#bdc6b6'; context.font = '28px Arial'; context.fillText('Tapi / TapMango AI', 70, 1353);
+    context.fillStyle = '#bdc6b6'; context.font = '28px Arial'; context.fillText('TAPI / TapMango AI', 70, 1353);
   });
   const evidenceDisplay = new THREE.Mesh(new THREE.PlaneGeometry(0.329, 0.526), new THREE.MeshBasicMaterial({ map: tapiEvidence, toneMapped: false }));
   evidenceDisplay.position.set(0, 0.414, 0.0167);
@@ -867,7 +867,7 @@ export function buildStudioFurniture(
   box(researchNotebook, 0.188, 0.012, 0.253, 0.001, 0.012, 0, paper, 0.001);
   const researchNotes = canvasTexture(620, 840, context => {
     context.fillStyle = '#dcd7c5'; context.fillRect(0, 0, 620, 840);
-    context.fillStyle = '#384137'; context.font = '500 41px Arial'; context.fillText('Tapi / notes', 48, 97);
+    context.fillStyle = '#384137'; context.font = '500 41px Arial'; context.fillText('TAPI / notes', 48, 97);
     context.font = '30px Arial'; context.fillText('An answer needs context.', 48, 177);
     context.font = '28px Arial';
     ['Merchant question', 'Relevant guidance', 'A useful next step'].forEach((text, index) => {

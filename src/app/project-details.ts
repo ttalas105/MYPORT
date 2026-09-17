@@ -11,7 +11,7 @@ export interface ProjectDetail {
   sections: { id: string; title: string; paragraphs: string[] }[];
 }
 
-// Concise hiring summaries backed by local source and task-history notes in research/portfolio/.
+// Hiring summaries aligned with Thomas's supplied résumé and research/portfolio/ evidence.
 // Keep individual contributions distinct from team ownership; do not invent impact metrics.
 export const PROJECT_DETAILS: ProjectDetail[] = [
   {
@@ -19,30 +19,30 @@ export const PROJECT_DETAILS: ProjectDetail[] = [
     "chapter": 1,
     "title": "LLM Driven Video Generator",
     "context": "Independent project",
-    "summary": "An AI workspace for planning YouTube videos, from research to scripts and thumbnails. I built the creation workflow and AI backend with a teammate.",
-    "role": "Creation workflow and AI backend",
-    "quickSummary": "Built the AI creation workflow and backend for research, scripts, titles, and thumbnails.",
+    "summary": "I built a full-stack YouTube creation workflow from scratch with a teammate. It helps creators research ideas and generate titles, scripts, and thumbnails.",
+    "role": "Full-stack creation workflow and AI backend",
+    "quickSummary": "Built a full-stack workflow for YouTube research, titles, scripts, and thumbnails.",
     "stack": "React, TypeScript, Gemini, YouTube APIs, Cloudflare Workers, D1",
     "sections": [
       {
         "id": "workflow",
         "title": "The creation workflow",
         "paragraphs": [
-          "I built a single chat for ideas, titles, scripts, and thumbnails. Creators can bring in images, short videos, or content from their YouTube channel."
+          "I built the React and TypeScript creation flow and Gemini backend on Cloudflare Workers/D1, connecting YouTube research to content generation."
         ]
       },
       {
         "id": "agent",
         "title": "Research and memory",
         "paragraphs": [
-          "I connected Gemini to YouTube research and saved creator preferences. The AI has limits on tool calls and time, and shows when video transcripts or other sources are missing."
+          "I designed AI tool calls with reusable research, saved creator preferences, input validation, request limits, and retries."
         ]
       },
       {
         "id": "testing",
-        "title": "Teamwork and testing",
+        "title": "Testing and outreach",
         "paragraphs": [
-          "I tested research, saved preferences, and follow-up requests, plus the full creation flow in Playwright. A teammate built the dashboard, onboarding, Creator Twin, and browser extension interface."
+          "I tested research, memory, and conversation continuity, and pitched the project to Stan’s CTO for a potential partnership."
         ]
       }
     ]
@@ -52,30 +52,30 @@ export const PROJECT_DETAILS: ProjectDetail[] = [
     "chapter": 2,
     "title": "OKRA",
     "context": "TapMango · built from scratch",
-    "summary": "I built TapMango’s goal-tracking app from scratch. It connects company and team goals to business data, with automatic progress reports and monthly check-ins.",
+    "summary": "I designed and built OKRA, TapMango’s internal goal-tracking tool, from scratch. It connects goals to business data and automates metric collection, reports, and monthly check-ins.",
     "role": "Full-stack development, data models, and reporting",
-    "quickSummary": "Built a goal-tracking app from scratch, with business data, progress reports, and monthly check-ins.",
+    "quickSummary": "Designed and built TapMango’s internal goal tracker, with automated metrics, reports, and monthly check-ins.",
     "stack": "Angular, TypeScript, PrimeNG, Node.js, Express, SQL Server",
     "sections": [
       {
         "id": "model",
         "title": "Goal tracking",
         "paragraphs": [
-          "I built the interface, APIs, and database calculations. Teams can set targets, review monthly progress, and trace each result back to its source records."
+          "I built the Angular interface, Node.js/Express APIs, and SQL Server data model. Teams can set goals, track progress, and trace results back to source data."
         ]
       },
       {
         "id": "reporting",
         "title": "Accurate reports",
         "paragraphs": [
-          "I automated data collection and added reporting rules, including a 30-day feature-usage measure. Reports keep zero usage separate from missing data and use the same rules in summaries and detailed views."
+          "I developed planning and reporting APIs that validate metric calculations and use consistent rules across reports and summaries."
         ]
       },
       {
         "id": "editing",
-        "title": "Safe updates",
+        "title": "Planning and check-ins",
         "paragraphs": [
-          "I added checks for conflicting edits and tools to carry goals into the next quarter. I also fixed a database change that had blocked manual check-ins, then verified the save against the affected schema."
+          "I built monthly check-ins and tools to carry goals into the next quarter, with checks that prevent conflicting edits."
         ]
       }
     ]
@@ -85,9 +85,9 @@ export const PROJECT_DETAILS: ProjectDetail[] = [
     "chapter": 3,
     "title": "Portal V2",
     "context": "TapMango · team redesign",
-    "summary": "I built six live pages in TapMango’s merchant portal as part of the redesign team. My work spanned Angular interfaces, API endpoints, and integration with existing services.",
+    "summary": "I developed live workflows for Portal V2, TapMango’s merchant dashboard for loyalty and customer operations. As part of the redesign team, I built Angular interfaces and C#/ASP.NET Core APIs.",
     "role": "Full-stack feature development",
-    "quickSummary": "Built six live merchant pages for memberships, promotions, rewards, messaging, billing, and reviews.",
+    "quickSummary": "Shipped merchant workflows for memberships, promotions, rewards, service requests, billing, and reviews.",
     "stack": "Angular, TypeScript, PrimeNG, Tailwind CSS, RxJS, C#, ASP.NET Core",
     "sections": [
       {
@@ -106,9 +106,9 @@ export const PROJECT_DETAILS: ProjectDetail[] = [
       },
       {
         "id": "service-and-billing",
-        "title": "Customer service and billing",
+        "title": "Service requests, billing, and reviews",
         "paragraphs": [
-          "I built Service Desk’s customer messaging inbox, Billing/Invoices for searching and downloading invoices, and Review Boost for reviewing feedback and managing review requests."
+          "I built Service Desk for handling service requests, Billing/Invoices for finding and downloading invoices, and Review Boost for managing customer reviews."
         ]
       }
     ]
@@ -116,32 +116,32 @@ export const PROJECT_DETAILS: ProjectDetail[] = [
   {
     "id": "tapi",
     "chapter": 4,
-    "title": "Tapi",
+    "title": "TAPI",
     "context": "TapMango · AI assistant",
-    "summary": "I contributed to TapMango’s AI assistant, helping merchants find product answers and work with business reports. My focus was reporting, help articles, and saved preferences.",
-    "role": "Reporting tools, knowledge search, and memory",
-    "quickSummary": "Built reporting tools, help-article search, and memory controls for TapMango’s AI assistant.",
+    "summary": "I co-built TAPI from the ground up so merchants can operate TapMango in natural language. The assistant works across AI models, with reporting, product-document search, and user-controlled memory.",
+    "role": "AI assistant development, reporting, search, and memory",
+    "quickSummary": "Co-built TAPI from the ground up so merchants can operate TapMango in natural language.",
     "stack": "Angular, TypeScript, NestJS, PostgreSQL, Prisma, OpenRouter, C#",
     "sections": [
       {
         "id": "reports",
-        "title": "Reports",
+        "title": "Reporting and approved execution",
         "paragraphs": [
-          "I added report search, history, and an approval step before a report runs. Access checks control which results the assistant can read, and repeated approvals do not create duplicate jobs."
+          "I implemented the reporting engine, history, and approved execution with NestJS and C# APIs, keeping access scoped to each merchant."
         ]
       },
       {
         "id": "guides",
-        "title": "Help and memory",
+        "title": "Product-document search",
         "paragraphs": [
-          "I built tools to search published help articles and show their sources. I also added controls to review and remove saved context, scoped to the right merchant and user."
+          "I built tools to search product documentation and show sources, so merchants can find answers about the platform through the assistant."
         ]
       },
       {
-        "id": "validation",
-        "title": "Testing",
+        "id": "memory",
+        "title": "User-controlled memory",
         "paragraphs": [
-          "I tested approval, permissions, duplicate requests, and unsupported report data. A completed report can remain private even when the assistant can track its status."
+          "I added controls to review and remove saved context, keeping memory scoped to the correct merchant and user."
         ]
       }
     ]

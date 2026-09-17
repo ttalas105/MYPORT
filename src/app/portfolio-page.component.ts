@@ -89,14 +89,14 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
   private albumRemovalTimer?: ReturnType<typeof setTimeout>;
   private readonly changeDetector = inject(ChangeDetectorRef);
 
-  readonly chapters = ['Thomas Talas', 'LLM Driven Video Generator', 'OKRA', 'Portal V2', 'Tapi', 'Automations', 'Get in touch'] as const;
+  readonly chapters = ['Thomas Talas', 'LLM Driven Video Generator', 'OKRA', 'Portal V2', 'TAPI', 'Automations', 'Get in touch'] as const;
   readonly contactChapter = STUDIO_STOPS.length - 1;
 
   readonly indexProjects = [
-    { chapter: 1, title: 'LLM Driven Video Generator', description: 'AI video planning tools.', context: 'Built with a teammate.' },
-    { chapter: 2, title: 'OKRA', description: 'Goals and progress reports.', context: 'Built from scratch at TapMango.' },
-    { chapter: 3, title: 'Portal V2', description: 'Memberships, marketing, service, and billing.', context: 'Built six live pages at TapMango.' },
-    { chapter: 4, title: 'Tapi', description: 'AI help and business reports.', context: 'Built reporting, search, and memory.' },
+    { chapter: 1, title: 'LLM Driven Video Generator', description: 'YouTube research, titles, scripts, and thumbnails.', context: 'Full-stack workflow built with a teammate.' },
+    { chapter: 2, title: 'OKRA', description: 'Internal goals, metrics, reports, and check-ins.', context: 'Designed and built from scratch at TapMango.' },
+    { chapter: 3, title: 'Portal V2', description: 'Memberships, promotions, rewards, service requests, billing, and reviews.', context: 'Shipped merchant workflows at TapMango.' },
+    { chapter: 4, title: 'TAPI', description: 'Operate TapMango in natural language.', context: 'Co-built the AI assistant from the ground up.' },
     { chapter: 5, title: 'Automations', description: 'Connected files, context, and CRM.', context: 'Lead engineer with North Group.' },
   ];
 
