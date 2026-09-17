@@ -1,4 +1,4 @@
-<header class="world-header" [class.project-focused]="detailProject() !== null || detailAlbum() !== null" [inert]="indexOpen() || detailProject() !== null || detailAlbum() !== null || aboutOpen()">
+<header class="world-header" [class.project-focused]="detailProject() !== null || detailAlbum() !== null" [inert]="indexOpen() || detailProject() !== null || detailAlbum() !== null || aboutOpen() || quickProjectsOpen()">
   <div class="world-tools" [class.about-occluded]="aboutOcclusion().header">
     <button #musicTrigger class="world-sound" data-audio-control data-music-menu type="button" (click)="setMusicOpen(!musicOpen())" [attr.aria-expanded]="musicOpen()" aria-controls="studio-music-panel" aria-label="Music settings" [class.is-muted]="!audio.enabled()">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8h3l4-4v12l-4-4H3z" />@if (audio.enabled()) { <path d="M13 7a5 5 0 0 1 0 6m2-9a9 9 0 0 1 0 12" /> } @else { <path d="m13 8 4 4m0-4-4 4" /> }</svg>
@@ -13,22 +13,24 @@
   [enabled]="audio.enabled()" (enabledChanged)="audio.setEnabled($event)"
   [volume]="audio.volume()" (volumeChanged)="audio.setVolume($event)" [openness]="audio.openness()" />
 
-<main #story class="world-story" id="top" [style.height.svh]="storyHeight" [inert]="indexOpen() || detailProject() !== null || detailAlbum() !== null || aboutOpen()">
+<main #story class="world-story" id="top" [style.height.svh]="storyHeight" [inert]="indexOpen() || detailProject() !== null || detailAlbum() !== null || aboutOpen() || quickProjectsOpen()">
   <div class="world-sticky" [class.studio-ready]="studioReady()" [class.studio-unavailable]="studioUnavailable()" [class.project-focused]="detailProject() !== null || detailAlbum() !== null || indexPreview() !== null">
     @defer (on idle) {
       <app-system-scene
         [focusChapter]="detailProject()?.chapter ?? indexPreview()"
         [readerChapter]="detailProject()?.chapter ?? null"
         [selectedAlbumId]="detailAlbum()?.id ?? null"
-        [albumInteractionsBlocked]="indexOpen() || detailProject() !== null || aboutOpen()"
+        [albumInteractionsBlocked]="indexOpen() || detailProject() !== null || aboutOpen() || quickProjectsOpen()"
         (readerPositionsChanged)="readerPositions.set($event)"
         (albumRequested)="openAlbum($event)"
         (projectRequested)="openProject($event.chapter, $event.event)"
         (albumReaderLeftChanged)="albumReaderLeft.set($event)"
         (aboutRequested)="openAbout($event)"
+        (projectViewRequested)="openQuickProjects($event)"
         (captionChanged)="captionChapter.set($event)"
         (acousticsChanged)="audio.setOpenness($event)"
         (sceneReady)="studioReady.set(true)"
+        (lookStarted)="cancelEntranceWalk()"
         (sceneUnavailable)="studioUnavailable.set(true); studioReady.set(true)"
       />
     }
@@ -38,28 +40,31 @@
     @if (studioUnavailable()) { <p class="studio-fallback" role="status">The 3D studio isn’t available on this device. Explore the work with the Index.</p> }
     <section class="story-panel story-panel--intro" [class.is-active]="chapterIsVisible(0) && atEntrance()" [class.about-occluded]="aboutOcclusion().intro" aria-labelledby="intro-title">
       <h1 id="intro-title"><span>Thomas</span><span>Talas</span></h1>
-      @if (studioUnavailable()) { <button class="about-fallback" type="button" (click)="openAbout($event)" aria-haspopup="dialog" aria-controls="studio-about">About Thomas</button> }
+      @if (studioUnavailable()) {
+        <button class="about-fallback" type="button" (click)="openAbout($event)" aria-haspopup="dialog" aria-controls="studio-about">About Thomas</button>
+        <button class="project-view-fallback" type="button" (click)="openQuickProjects($event)" aria-haspopup="dialog" aria-controls="quick-projects">Project View</button>
+      }
       <button class="enter-studio" type="button" (click)="enterStudio()">Enter the studio</button>
     </section>
 
     <section class="story-panel story-panel--project story-panel--stanley" [class.is-active]="chapterIsVisible(1)" aria-labelledby="stanley-title">
-      <h2 id="stanley-title">Stanley for YouTube</h2>
+      <h2 id="stanley-title">LLM Driven Video Generator</h2>
       <div class="project-context">Independent project</div>
-      <p>A conversational creative tool we built to get the company’s attention.</p>
-      <button class="explore-project" type="button" (click)="openProject(1, $event)" aria-label="Explore Stanley for YouTube">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+      <p>AI tools for researching and planning YouTube videos.</p>
+      <button class="explore-project" type="button" (click)="openProject(1, $event)" aria-label="Explore LLM Driven Video Generator">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
     </section>
 
     <section class="story-panel story-panel--project story-panel--okra" [class.is-active]="chapterIsVisible(2)" aria-labelledby="okra-title">
       <h2 id="okra-title">OKRA</h2>
       <div class="project-context">TapMango · built from scratch</div>
-      <p>Operational metrics that remain traceable from source to review.</p>
+      <p>Company goal tracking with automatic progress reports.</p>
       <button class="explore-project" type="button" (click)="openProject(2, $event)" aria-label="Explore OKRA">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
     </section>
 
     <section class="story-panel story-panel--project story-panel--portal" [class.is-active]="chapterIsVisible(3)" aria-labelledby="portal-title">
-      <h2 id="portal-title">Portal</h2>
+      <h2 id="portal-title">Portal V2</h2>
       <div class="project-context">TapMango · team redesign</div>
-      <p>Redesigning the merchant portal with the team at TapMango.</p>
+      <p>Six live merchant tools for memberships, marketing, customer service, and billing.</p>
       <small>Illustrative interface · no merchant data</small>
       <button class="explore-project" type="button" (click)="openProject(3, $event)" aria-label="Explore Portal V2">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
     </section>
@@ -67,11 +72,18 @@
     <section class="story-panel story-panel--project story-panel--tapi" [class.is-active]="chapterIsVisible(4)" aria-labelledby="tapi-title">
       <h2 id="tapi-title">Tapi</h2>
       <div class="project-context">TapMango · AI assistant</div>
-      <p>Merchant questions, supported reports, and answers grounded in sources.</p>
+      <p>An AI assistant for product help and business reports.</p>
       <button class="explore-project" type="button" (click)="openProject(4, $event)" aria-label="Explore Tapi">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
     </section>
 
-    <section class="story-panel story-panel--contact" [class.is-active]="chapterIsVisible(5)" aria-labelledby="contact-title">
+    <section class="story-panel story-panel--project story-panel--automations" [class.is-active]="chapterIsVisible(5)" aria-labelledby="automations-title">
+      <h2 id="automations-title">Automations</h2>
+      <div class="project-context">North Group · Lead engineer</div>
+      <p>A connected workspace for files, notes, emails, and client relationships.</p>
+      <button class="explore-project" type="button" (click)="openProject(5, $event)" aria-label="Explore Automations">Explore project <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+    </section>
+
+    <section class="story-panel story-panel--contact" [class.is-active]="chapterIsVisible(contactChapter)" aria-labelledby="contact-title">
       <h2 id="contact-title">Get in touch.</h2>
       <div class="contact-links">
         <a href="https://github.com/ttalas105" target="_blank" rel="noreferrer">GitHub</a>
@@ -81,7 +93,7 @@
     </section>
 
     <div class="scroll-cue" [class.is-visible]="scrollCueVisible()" [attr.aria-hidden]="!scrollCueVisible()">
-      <span class="scroll-cue__content">Scroll to continue <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v13m-5-5 5 5 5-5" /></svg></span>
+      <span class="scroll-cue__content"><span>Scroll to continue<span class="scroll-cue__look">Drag to look around</span></span> <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v13m-5-5 5 5 5-5" /></svg></span>
     </div>
 
     <nav class="chapter-rail" [class.about-occluded]="aboutOcclusion().rail" aria-label="Room progress">
@@ -113,6 +125,69 @@
         @for (paragraph of about.paragraphs; track paragraph) { <p>{{ paragraph }}</p> }
       </div>
       <button class="about-enter" type="button" (click)="enterFromAbout()">Make yourself at home <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+    </section>
+  </div>
+}
+
+@if (quickProjectsOpen()) {
+  <div class="quick-project-overlay">
+    <button class="quick-dismiss" type="button" tabindex="-1" aria-hidden="true" (click)="closeQuickProjects()"></button>
+    <section #quickDialog id="quick-projects" class="quick-projects" [class.is-reading]="quickSelection() !== null" role="dialog" aria-modal="true" [attr.aria-labelledby]="quickSelection() ? 'quick-reading-title' : 'quick-title'">
+      <div class="quick-toolbar">
+        @if (quickSelection()) {
+          <button class="quick-back" type="button" (click)="showQuickList()"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 10H3m6-6-6 6 6 6" /></svg>All projects</button>
+        } @else {
+          <p>Thomas Talas <span>/ Selected work</span></p>
+        }
+        <button class="quick-close" type="button" (click)="closeQuickProjects()" aria-label="Close quick view">Close <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" /></svg></button>
+      </div>
+      <div class="quick-intro">
+        <h2 id="quick-title">Projects</h2>
+        <p>The short version of what I built. Open a project for the details.</p>
+        <svg class="quick-record" viewBox="0 0 160 160" aria-hidden="true">
+          <circle class="record-disc" cx="80" cy="80" r="77" />
+          <g class="record-grooves"><circle cx="80" cy="80" r="68" /><circle cx="80" cy="80" r="61" /><circle cx="80" cy="80" r="54" /><circle cx="80" cy="80" r="47" /></g>
+          <circle class="record-label" cx="80" cy="80" r="28" /><circle class="record-hole" cx="80" cy="80" r="5" />
+        </svg>
+        <nav class="quick-socials" aria-label="Socials and contact">
+          <a href="https://github.com/ttalas105" target="_blank" rel="noopener noreferrer">GitHub <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M5 5h10v10" /></svg></a>
+          <a href="https://www.linkedin.com/in/thomas-talas-699518229/" target="_blank" rel="noopener noreferrer">LinkedIn <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15 15 5M5 5h10v10" /></svg></a>
+          <a href="mailto:thomas@talas.ca">Email <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14v10H3zM3 5l7 6 7-6" /></svg></a>
+        </nav>
+      </div>
+      @if (quickSelection(); as project) {
+        <section class="quick-reading" aria-labelledby="quick-reading-title">
+          <header class="quick-reading-header">
+            <h2 id="quick-reading-title" tabindex="-1">{{ project.title }}</h2>
+            <p>{{ project.context }}</p>
+          </header>
+          <article class="quick-reading-copy" tabindex="0" [attr.aria-label]="project.title + ' details'">
+            <p class="quick-reading-summary">{{ project.summary }}</p>
+            <dl class="quick-reading-facts">
+              <dt>My role</dt><dd>{{ project.role }}</dd>
+              <dt>Built with</dt><dd>{{ project.stack }}</dd>
+            </dl>
+            @for (section of project.sections; track section.id) {
+              <section>
+                <h3>{{ section.title }}</h3>
+                @for (paragraph of section.paragraphs; track $index) { <p>{{ paragraph }}</p> }
+              </section>
+            }
+            <button class="quick-visit" type="button" (click)="visitQuickProject(project.chapter)">See in the studio <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></button>
+          </article>
+        </section>
+      } @else {
+        <div class="quick-list" tabindex="0" role="region" aria-label="Five projects">
+          @for (project of quickProjects; track project.id) {
+            <button class="quick-project" type="button" [attr.data-quick-project]="project.id" [attr.aria-label]="'Read ' + project.title" (click)="selectQuickProject(project)">
+              <span class="quick-project-heading"><strong>{{ project.title }}</strong><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h14m-5-5 5 5-5 5" /></svg></span>
+              <span class="quick-project-context">{{ project.context }}</span>
+              <span class="quick-project-summary">{{ project.quickSummary }}</span>
+              <span class="quick-project-stack">{{ project.stack }}</span>
+            </button>
+          }
+        </div>
+      }
     </section>
   </div>
 }
@@ -188,7 +263,7 @@
       <div class="index-footer">
         <div class="index-shortcuts">
           <div class="index-contact">
-            <button class="index-contact-title" type="button" (click)="scrollToChapter(5)">
+            <button class="index-contact-title" type="button" (click)="scrollToChapter(contactChapter)">
               <span>Get in touch</span>
             </button>
             <nav class="index-profiles" aria-label="Get in touch">

@@ -5,7 +5,7 @@ import { mapStudioSurfaces } from './studio-surfaces';
 import type { StudioMaterials } from './studio-furniture';
 
 /** A working instrument corner, grounded in the unused space behind the research desk. */
-export function buildStudioMusicCorner(m: StudioMaterials): { group: THREE.Group; resources: THREE.Texture[] } {
+export function buildStudioMusicCorner(m: StudioMaterials): { group: THREE.Group; rankMount: THREE.Group; resources: THREE.Texture[] } {
   const group = new THREE.Group();
   group.name = 'Back-right music production corner';
   const resources: THREE.Texture[] = [];
@@ -140,73 +140,20 @@ export function buildStudioMusicCorner(m: StudioMaterials): { group: THREE.Group
   stool.add(seat);
 
   const acoustic = new THREE.Group();
-  acoustic.name = 'Felt absorbers and walnut depth diffuser';
+  acoustic.name = 'Recessed walnut current ranks frame';
   acoustic.position.set(2.6, 2.15, -3.99);
   group.add(acoustic);
   for (const x of [-.64, .64]) for (const y of [-.35, .35]) box(acoustic, [.035, .045, .06], [x, y, -.07], m.metal, .003);
   box(acoustic, [1.60, .98, .03], [0, 0, -.025], m.walnut, .005);
   for (const x of [-.779, .779]) box(acoustic, [.042, .98, .05], [x, 0, -.005], m.wood, .006);
   for (const y of [-.469, .469]) box(acoustic, [1.516, .042, .05], [0, y, -.005], m.wood, .006);
-  for (const x of [-.55, .55]) {
-    box(acoustic, [.397, .833, .041], [x, 0, .0135], m.fabric, .018);
-    for (const edge of [-1, 1]) box(acoustic, [.004, .792, .006], [x + edge * .177, 0, .035], m.rubber, .001);
-  }
-  for (let row = 0; row < 9; row++) for (let column = 0; column < 7; column++) {
-    const depth = .024 + ((column * column + row * row + 3 * column) % 7) * .012;
-    box(acoustic, [.071, .082, depth], [(column - 3) * .077, (row - 4) * .088, -.01 + depth / 2], (row + column) % 4 === 0 ? m.walnut : m.wood, .002);
-  }
-
-  // A single wall-hung instrument fills the narrow gap between the old battens
-  // and the new acoustic frame; it remains behind, and above, the OKRA rack.
-  const guitar = new THREE.Group();
-  guitar.name = 'Wall-hung walnut electric guitar';
-  guitar.position.set(1.51, 1.75, -4.045);
-  group.add(guitar);
-  const outline = new THREE.Shape();
-  outline.moveTo(-.025, .252);
-  outline.bezierCurveTo(-.042, .198, -.057, .145, -.080, .186);
-  outline.bezierCurveTo(-.105, .243, -.170, .191, -.145, .122);
-  outline.bezierCurveTo(-.09, .049, -.094, -.003, -.140, -.050);
-  outline.bezierCurveTo(-.198, -.135, -.126, -.207, 0, -.207);
-  outline.bezierCurveTo(.126, -.207, .198, -.135, .140, -.050);
-  outline.bezierCurveTo(.10, -.010, .095, .026, .125, .080);
-  outline.bezierCurveTo(.17, .147, .145, .216, .091, .174);
-  outline.bezierCurveTo(.052, .145, .046, .252, .025, .252);
-  outline.closePath();
-  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(outline, { depth: .044, bevelEnabled: true, bevelThickness: .004, bevelSize: .003, bevelSegments: 2, curveSegments: 12 }), m.wood);
-  body.castShadow = body.receiveShadow = true;
-  guitar.add(body);
-  box(guitar, [.05, .415, .035], [0, .425, .027], m.walnut, .005);
-  box(guitar, [.043, .408, .009], [0, .427, .048], m.rubber, .002);
-  box(guitar, [.071, .135, .023], [0, .685, .022], m.wood, .007);
-  for (let fret = 1; fret <= 20; fret++) {
-    const y = .629 - .73 * (1 - 2 ** (-fret / 12));
-    if (y > .225) box(guitar, [.043, .0013, .0025], [0, y, .053], nickel, .0004);
-  }
-  for (const y of [.10, -.010]) box(guitar, [.086, .023, .010], [0, y, .052], ivory, .002);
-  box(guitar, [.092, .019, .015], [0, -.098, .054], nickel, .002);
-  for (let string = 0; string < 6; string++) {
-    cylinder(guitar, .00025, .74, [(string - 2.5) * .006, .265, .063], nickel, 5);
-  }
-  for (const side of [-1, 1]) for (const y of [.646, .685, .724]) {
-    const peg = cylinder(guitar, .006, .022, [side * .043, y, .022], nickel, 12);
-    peg.rotation.z = Math.PI / 2;
-    box(guitar, [.014, .018, .010], [side * .055, y, .022], ivory, .004);
-  }
-  for (const point of [[.092, -.07], [.105, -.119]]) {
-    const dial = cylinder(guitar, .009, .009, [point[0], point[1], .054], m.brass, 16);
-    dial.rotation.x = Math.PI / 2;
-  }
-  box(guitar, [.083, .090, .042], [0, .618, -.024], m.metal, .008);
-  rod(guitar, new THREE.Vector3(0, .608, -.003), new THREE.Vector3(0, .608, .007), .007, m.metal);
-  for (const side of [-1, 1]) cable(guitar, [[0, .608, .007], [side * .041, .611, .008], [side * .041, .632, .026]], .006);
 
   // Apply the same physical material scales as the room while each box still
   // has its face charts, then merge static pieces without losing those UVs.
   mapStudioSurfaces(group, new Map<THREE.Material, { metres: number; grain?: boolean }>([
     [m.wood, { metres: 1, grain: true }], [m.walnut, { metres: 1, grain: true }], [m.fabric, { metres: .265 }],
   ]));
-  for (const assembly of [workstation, stool, acoustic, guitar]) {
+  for (const assembly of [workstation, stool, acoustic]) {
     assembly.updateWorldMatrix(true, true);
     const inverse = assembly.matrixWorld.clone().invert();
     const batches = new Map<THREE.Material, { parts: THREE.BufferGeometry[]; originals: THREE.Mesh[] }>();
@@ -232,5 +179,5 @@ export function buildStudioMusicCorner(m: StudioMaterials): { group: THREE.Group
       originals.forEach(original => original.dispose());
     }
   }
-  return { group, resources };
+  return { group, rankMount: acoustic, resources };
 }

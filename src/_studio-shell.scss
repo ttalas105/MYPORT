@@ -11,7 +11,8 @@
   font-size: 0.82rem;
 }
 button.scene-about-trigger.pointer-focus-return:focus,
-button.about-fallback.pointer-focus-return:focus { outline: none; }
+button.about-fallback.pointer-focus-return:focus,
+button.project-view-fallback.pointer-focus-return:focus { outline: none; }
 .world-tools { display: flex; gap: 1.8rem; align-items: center; }
 .world-tools button, .world-tools a { display: grid; min-height: 44px; place-items: center; }
 .world-tools button:hover, .world-tools a:hover { color: var(--room-amber); }
@@ -62,6 +63,7 @@ button.about-fallback.pointer-focus-return:focus { outline: none; }
   animation-play-state: paused;
 }
 .scroll-cue.is-visible .scroll-cue__content { animation-play-state: running; }
+.scroll-cue__look { display: block; margin-top: .3rem; font-size: .8em; color: var(--room-muted); }
 .scroll-cue svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 @keyframes studio-scroll-cue { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
 

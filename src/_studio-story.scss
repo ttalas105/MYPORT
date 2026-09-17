@@ -59,6 +59,7 @@
   letter-spacing: -.035em;
 }
 .story-panel--intro > .about-fallback { margin-right: 1.5rem; }
+.story-panel--intro > .project-view-fallback { margin-right: 1.5rem; }
 .story-panel--intro > button {
   display: inline-flex;
   align-items: center;
@@ -87,6 +88,9 @@
   background: radial-gradient(ellipse at 68% 50%, rgba(5, 5, 7, .96), rgba(5, 5, 7, .72) 52%, transparent 76%);
 }
 .story-panel--okra, .story-panel--tapi { top: auto; left: var(--page); }
+.story-panel--automations { top: auto; right: var(--page); text-align: right; }
+.story-panel--automations > p { margin-left: auto; }
+.story-panel--automations::before { background: radial-gradient(ellipse at 68% 50%, rgba(5, 5, 7, .96), rgba(5, 5, 7, .72) 52%, transparent 76%); }
 .story-panel--portal small { display: block; margin-top: 1rem; color: var(--room-muted); line-height: 1.5; }
 .story-panel--contact { bottom: 15%; left: var(--page); width: min(42rem, 62vw); }
 .contact-links { display: flex; column-gap: 1.75rem; flex-wrap: wrap; margin-top: 1.25rem; }
@@ -117,7 +121,7 @@
 .studio-unavailable { background: #171512; }
 
 @media (max-width: 760px) {
-  .story-panel, .story-panel--intro, .story-panel--stanley, .story-panel--okra, .story-panel--portal, .story-panel--tapi, .story-panel--contact {
+  .story-panel, .story-panel--intro, .story-panel--stanley, .story-panel--okra, .story-panel--portal, .story-panel--tapi, .story-panel--automations, .story-panel--contact {
     top: auto;
     right: var(--page);
     bottom: 17%;
@@ -126,7 +130,7 @@
     max-width: 30rem;
     text-align: left;
   }
-  .story-panel::before, .story-panel--stanley::before, .story-panel--portal::before {
+  .story-panel::before, .story-panel--stanley::before, .story-panel--portal::before, .story-panel--automations::before {
     inset: -3rem -2rem;
     background: radial-gradient(ellipse at 32% 64%, rgba(5, 5, 7, .98), rgba(5, 5, 7, .8) 60%, transparent 88%);
   }
@@ -143,7 +147,7 @@
   .story-panel--project > p { font-size: 1.125rem; margin-top: 1.05rem; line-height: 1.45; }
   .story-panel--project .project-context { margin-top: .85rem; font-size: .95rem; }
   .story-panel--project .explore-project { margin-top: 1.05rem; font-size: 1.05rem; }
-  .story-panel--stanley > p, .story-panel--portal > p { margin-left: 0; }
+  .story-panel--stanley > p, .story-panel--portal > p, .story-panel--automations > p { margin-left: 0; }
 }
 
 // The existing short-landscape layout only tightens caption/action spacing.

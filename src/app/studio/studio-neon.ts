@@ -13,25 +13,34 @@ type AnimatedNeonLetter = {
 
 export interface StudioNeon {
     group: THREE.Group;
-    aboutSign: THREE.Mesh;
+    sign: THREE.Mesh;
     /** Seek-safe one-shot progress. Both 0 and 1 restore the exact resting appearance. */
     animateActivation(progress: number): void;
 }
 
 /** A physical invitation at the threshold. Interaction is supplied by the HTML layer. */
 export function buildAboutNeon(m: StudioMaterials): StudioNeon {
-    const group = new THREE.Group();
-    group.name = 'CLICK ME — exterior neon';
-    group.position.set(1.78, 1.95, 4.36);
+    return buildNeon(m, false);
+}
 
-    const core = new THREE.MeshBasicMaterial({ color: 0xffeedb, toneMapped: false });
+export function buildProjectViewNeon(m: StudioMaterials): StudioNeon {
+    return buildNeon(m, true);
+}
+
+function buildNeon(m: StudioMaterials, projects: boolean): StudioNeon {
+    const label = projects ? 'PROJECT VIEW' : 'CLICK ME';
+    const group = new THREE.Group();
+    group.name = `${label} — exterior neon`;
+    group.position.set(projects ? -1.65 : 1.78, 1.95, 4.36);
+
+    const core = new THREE.MeshBasicMaterial({ color: projects ? 0xe4c9ff : 0xffeedb, toneMapped: false });
     const glass = new THREE.MeshStandardMaterial({
-        color: 0xff8c91, emissive: 0xff657d, emissiveIntensity: 1.7,
+        color: projects ? 0xb377ff : 0xff8c91, emissive: projects ? 0x9e4dff : 0xff657d, emissiveIntensity: 1.7,
         roughness: .24, metalness: .05, transparent: true, opacity: .46,
         depthWrite: false, toneMapped: false,
     });
     const bloom = new THREE.MeshBasicMaterial({
-        color: 0xff657d, transparent: true, opacity: .095,
+        color: projects ? 0x9e4dff : 0xff657d, transparent: true, opacity: .095,
         blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
     });
     const letters: AnimatedNeonLetter[] = [];
@@ -41,11 +50,11 @@ export function buildAboutNeon(m: StudioMaterials): StudioNeon {
     const restEmissiveColor = glass.emissive.clone();
     const restBloomColor = bloom.color.clone();
     const hotCoreColor = new THREE.Color(0xffffff);
-    const hotGlassColor = new THREE.Color(0xffdec4);
-    const hotEmissiveColor = new THREE.Color(0xffc09d);
-    const hotBloomColor = new THREE.Color(0xffb08c);
-    const restLightColor = new THREE.Color(0xff6d82);
-    const hotLightColor = new THREE.Color(0xffbf9b);
+    const hotGlassColor = new THREE.Color(projects ? 0xebd4ff : 0xffdec4);
+    const hotEmissiveColor = new THREE.Color(projects ? 0xce9aff : 0xffc09d);
+    const hotBloomColor = new THREE.Color(projects ? 0xbb76ff : 0xffb08c);
+    const restLightColor = new THREE.Color(projects ? 0xa057ff : 0xff6d82);
+    const hotLightColor = new THREE.Color(projects ? 0xd5a7ff : 0xffbf9b);
     const ceramic = new THREE.MeshStandardMaterial({ color: 0x9e8580, roughness: .54 });
 
     function fixture(x: number, y: number, z: number, radius: number, depth: number, material: THREE.Material) {
@@ -77,10 +86,36 @@ export function buildAboutNeon(m: StudioMaterials): StudioNeon {
             [[.226, .33], [.062, .33], [.013, .307], [.005, .263], [.005, .070], [.012, .032], [.047, .006], [.227, .006]],
             [[.012, .167], [.195, .167]],
         ] },
+        P: { width: .23, strokes: [[
+            [.007, .006], [.007, .33], [.155, .33], [.211, .307], [.227, .254],
+            [.210, .197], [.160, .177], [.013, .177],
+        ]] },
+        R: { width: .25, strokes: [
+            [[.007, .006], [.007, .33], [.159, .33], [.215, .305], [.229, .254], [.210, .199], [.157, .177], [.013, .177]],
+            [[.112, .177], [.245, .006]],
+        ] },
+        O: { width: .25, strokes: [[
+            [.125, .334], [.045, .321], [.008, .268], [.006, .073], [.041, .020],
+            [.125, .006], [.208, .020], [.243, .073], [.241, .268], [.205, .321], [.125, .334],
+        ]] },
+        J: { width: .23, strokes: [
+            [[.044, .33], [.225, .33]],
+            [[.199, .327], [.199, .075], [.177, .022], [.113, .006], [.045, .020], [.009, .07]],
+        ] },
+        T: { width: .24, strokes: [
+            [[.004, .33], [.235, .33]], [[.12, .326], [.12, .006]],
+        ] },
+        V: { width: .25, strokes: [[
+            [.005, .33], [.095, .07], [.125, .007], [.155, .07], [.245, .33],
+        ]] },
+        W: { width: .36, strokes: [[
+            [.005, .33], [.062, .055], [.082, .008], [.105, .056], [.18, .267],
+            [.255, .056], [.278, .008], [.298, .055], [.355, .33],
+        ]] },
     };
 
-    function row(text: string, baseline: number, spacing: number) {
-        const width = [...text].reduce((total, letter) => total + glyphs[letter].width, 0) + (text.length - 1) * spacing;
+    function row(text: string, baseline: number, spacing: number, scale = 1, heightScale = scale) {
+        const width = ([...text].reduce((total, letter) => total + glyphs[letter].width, 0) + (text.length - 1) * spacing) * scale;
         let x = -width / 2;
         for (const letter of text) {
             const glyph = glyphs[letter];
@@ -89,7 +124,7 @@ export function buildAboutNeon(m: StudioMaterials): StudioNeon {
             const centerY = (Math.min(...glyphPoints.map(point => point[1])) + Math.max(...glyphPoints.map(point => point[1]))) / 2;
             const letterGroup = new THREE.Group();
             letterGroup.name = `Neon letter ${letters.length + 1} — ${letter}`;
-            letterGroup.position.set(x + centerX, baseline + centerY, .006);
+            letterGroup.position.set(x + centerX * scale, baseline + centerY * heightScale, .006);
             group.add(letterGroup);
             // Each letter owns its color state, while every material remains attached for disposal.
             const letterCore = letters.length ? core.clone() : core;
@@ -97,7 +132,7 @@ export function buildAboutNeon(m: StudioMaterials): StudioNeon {
             const letterBloom = letters.length ? bloom.clone() : bloom;
             letters.push({ group: letterGroup, restPosition: letterGroup.position.clone(), core: letterCore, glass: letterGlass, bloom: letterBloom });
             for (const stroke of glyph.strokes) {
-                const points = stroke.map(([px, py]) => new THREE.Vector3(px - centerX, py - centerY, 0));
+                const points = stroke.map(([px, py]) => new THREE.Vector3((px - centerX) * scale, (py - centerY) * heightScale, 0));
                 const path = new THREE.CatmullRomCurve3(points, false, 'centripetal');
                 // Different radii preserve a hot center, glass envelope and a narrow optical fringe.
                 const hotTube = new THREE.Mesh(new THREE.TubeGeometry(path, 72, .0058, 8, false), letterCore);
@@ -120,37 +155,43 @@ export function buildAboutNeon(m: StudioMaterials): StudioNeon {
                     fixture(endX, endY, -.030, .0033, .072, m.rubber);
                 }
             }
-            x += glyph.width + spacing;
+            x += (glyph.width + spacing) * scale;
         }
     }
-    row('CLICK', .13, .07);
-    row('ME', -.40, .10);
+    if (projects) {
+        row('PROJECT', .13, .055, .64, .9);
+        row('VIEW', -.40, .08);
+    } else {
+        row('CLICK', .13, .07);
+        row('ME', -.40, .10);
+    }
 
     // Real lights tint the nearby plaster; there is no floating glow plane or screen backdrop.
     for (const [x, y] of [[-.40, .26], [.40, .26], [0, -.22]]) {
-        const light = new THREE.PointLight(0xff6d82, .10, 1.15, 2);
+        const light = new THREE.PointLight(restLightColor, .10, 1.15, 2);
         light.position.set(x, y, -.014);
         group.add(light);
         wallLights.push(light);
     }
 
-    const aboutSign = new THREE.Mesh(new THREE.PlaneGeometry(1.60, 1.15), new THREE.MeshBasicMaterial({
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.60, 1.15), new THREE.MeshBasicMaterial({
         transparent: true, opacity: 0, colorWrite: false, depthWrite: false, side: THREE.DoubleSide,
     }));
-    aboutSign.name = 'CLICK ME — about Thomas interaction bounds';
-    aboutSign.position.set(0, 0, .025);
+    sign.name = `${label} — interaction bounds`;
+    sign.position.set(0, 0, .025);
     // Retain geometric bounds for the HTML button, but exclude this helper from
     // every render pass, including depth/normal overrides used for occlusion.
-    aboutSign.visible = false;
-    group.add(aboutSign);
+    sign.visible = false;
+    group.add(sign);
 
     function animateActivation(progress: number): void {
         const p = Number.isFinite(progress) ? THREE.MathUtils.clamp(progress, 0, 1) : 0;
         const resting = p === 0 || p === 1;
         const energy: number[] = [];
         letters.forEach((letter, index) => {
-            // Seven staggered pulses finish at 98% of the caller's one-shot duration.
-            const t = resting ? 0 : THREE.MathUtils.clamp((p - index * .065) / .59, 0, 1);
+            // Both signs complete the same staggered response within 950ms.
+            const stagger = .39 / Math.max(letters.length - 1, 1);
+            const t = resting ? 0 : THREE.MathUtils.clamp((p - index * stagger) / .59, 0, 1);
             const active = t > 0 && t < 1;
             const surge = active
                 ? THREE.MathUtils.smoothstep(t, 0, .18) * (1 - THREE.MathUtils.smoothstep(t, .18, 1))
@@ -174,13 +215,12 @@ export function buildAboutNeon(m: StudioMaterials): StudioNeon {
             letter.bloom.color.copy(restBloomColor).lerp(hotBloomColor, surge);
             letter.bloom.opacity = .095 + .15 * surge;
         });
-        const lightLetters = [[0, 1, 2], [3, 4], [5, 6]];
         wallLights.forEach((light, index) => {
-            const surge = Math.max(...lightLetters[index].map(letter => energy[letter]));
+            const surge = Math.max(...energy.slice(Math.ceil(index * letters.length / 3), Math.ceil((index + 1) * letters.length / 3)));
             light.color.copy(restLightColor).lerp(hotLightColor, surge);
             light.intensity = .10 + .22 * surge;
         });
     }
 
-    return { group, aboutSign, animateActivation };
+    return { group, sign, animateActivation };
 }

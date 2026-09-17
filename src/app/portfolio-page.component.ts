@@ -28,12 +28,19 @@ import { STUDIO_ALL_ALBUMS, StudioAlbum } from './studio/studio-albums';
 export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
   readonly storyHeight = STUDIO_STORY_HEIGHT_SVH;
   readonly about = STUDIO_ABOUT;
+  readonly quickProjects = PROJECT_DETAILS;
   readonly audio = inject(StudioAudioService);
   @ViewChild('story', { static: true }) private readonly storyRef!: ElementRef<HTMLElement>;
   @ViewChild('indexTrigger', { static: true }) private readonly indexTriggerRef!: ElementRef<HTMLButtonElement>;
   @ViewChild('musicTrigger', { static: true }) private readonly musicTriggerRef!: ElementRef<HTMLButtonElement>;
   @ViewChild('indexDialog') set indexDialog(ref: ElementRef<HTMLElement> | undefined) {
     this.indexDialogElement = ref?.nativeElement;
+  }
+  @ViewChild('quickDialog') set quickDialog(ref: ElementRef<HTMLElement> | undefined) {
+    this.quickDialogElement = ref?.nativeElement;
+    if (ref) queueMicrotask(() => {
+      if (this.quickProjectsOpen() && !this.quickSelection()) this.quickDialogElement?.querySelector<HTMLButtonElement>('.quick-close')?.focus({ preventScroll: true });
+    });
   }
   @ViewChild('projectDialog') set projectDialog(ref: ElementRef<HTMLElement> | undefined) {
     this.projectDialogElement = ref?.nativeElement;
@@ -61,6 +68,12 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
   }
 
   private indexDialogElement?: HTMLElement;
+  private quickDialogElement?: HTMLElement;
+  private quickListScroll = 0;
+  private quickReturnId?: string;
+  private quickTrigger?: HTMLElement;
+  private quickOpenedWithPointer = false;
+  private quickScrollProgress = 0;
   private aboutDialogElement?: HTMLElement;
   private aboutResizeObserver?: ResizeObserver;
   private aboutTrigger?: HTMLElement;
@@ -76,13 +89,15 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
   private albumRemovalTimer?: ReturnType<typeof setTimeout>;
   private readonly changeDetector = inject(ChangeDetectorRef);
 
-  readonly chapters = ['Thomas Talas', 'Stanley for YouTube', 'OKRA', 'Portal V2', 'Tapi', 'Get in touch'] as const;
+  readonly chapters = ['Thomas Talas', 'LLM Driven Video Generator', 'OKRA', 'Portal V2', 'Tapi', 'Automations', 'Get in touch'] as const;
+  readonly contactChapter = STUDIO_STOPS.length - 1;
 
   readonly indexProjects = [
-    { chapter: 1, title: 'Stanley for YouTube', description: 'Creative tools for YouTube.', context: 'Independent project.' },
-    { chapter: 2, title: 'OKRA', description: 'Operational metrics.', context: 'Built from scratch at TapMango.' },
-    { chapter: 3, title: 'Portal V2', description: 'Merchant tools.', context: 'A team redesign at TapMango.' },
-    { chapter: 4, title: 'Tapi', description: 'AI for TapMango.', context: 'Reporting, knowledge, and memory.' },
+    { chapter: 1, title: 'LLM Driven Video Generator', description: 'AI video planning tools.', context: 'Built with a teammate.' },
+    { chapter: 2, title: 'OKRA', description: 'Goals and progress reports.', context: 'Built from scratch at TapMango.' },
+    { chapter: 3, title: 'Portal V2', description: 'Memberships, marketing, service, and billing.', context: 'Built six live pages at TapMango.' },
+    { chapter: 4, title: 'Tapi', description: 'AI help and business reports.', context: 'Built reporting, search, and memory.' },
+    { chapter: 5, title: 'Automations', description: 'Connected files, context, and CRM.', context: 'Lead engineer with North Group.' },
   ];
 
   readonly activeChapter = signal(0);
@@ -99,12 +114,14 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
   readonly leavingAlbum = signal<StudioAlbum | null>(null);
   readonly albumReaderLeft = signal<number | null>(null);
   readonly aboutOpen = signal(false);
+  readonly quickProjectsOpen = signal(false);
+  readonly quickSelection = signal<ProjectDetail | null>(null);
   readonly aboutPresented = signal(false);
   readonly aboutLeaving = signal(false);
   readonly aboutOcclusion = signal({ header: false, intro: false, rail: false });
-  readonly scrollCueVisible = computed(() => this.studioReady() && this.activeChapter() < 5 &&
+  readonly scrollCueVisible = computed(() => this.studioReady() && this.activeChapter() < this.contactChapter &&
     !this.indexOpen() && this.indexPreview() === null && !this.detailProject() &&
-    !this.detailAlbum() && !this.leavingAlbum() && !this.aboutOpen() && !this.aboutLeaving());
+    !this.detailAlbum() && !this.leavingAlbum() && !this.aboutOpen() && !this.aboutLeaving() && !this.quickProjectsOpen());
 
   private animationFrame = 0;
   private entranceFrame = 0;
@@ -140,16 +157,21 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
   @HostListener('document:keydown', ['$event'])
   onDialogKeydown(event: KeyboardEvent): void {
     if (event.key === 'Tab') this.aboutTrigger?.classList.remove('pointer-focus-return');
+    if (event.key === 'Tab') this.quickTrigger?.classList.remove('pointer-focus-return');
     if (this.musicOpen() && event.key === 'Escape') {
       event.preventDefault();
       this.setMusicOpen(false);
       return;
     }
-    const dialog = this.aboutOpen() ? this.aboutDialogElement : this.detailAlbum() ? this.albumDialogElement : this.detailProject() ? this.projectDialogElement : this.indexOpen() ? this.indexDialogElement : undefined;
+    const dialog = this.quickProjectsOpen() ? this.quickDialogElement : this.aboutOpen() ? this.aboutDialogElement : this.detailAlbum() ? this.albumDialogElement : this.detailProject() ? this.projectDialogElement : this.indexOpen() ? this.indexDialogElement : undefined;
     if (!dialog) return;
     if (event.key === 'Escape') {
       event.preventDefault();
-      if (this.aboutOpen()) this.closeAbout();
+      if (this.quickProjectsOpen()) {
+        if (this.quickSelection()) this.showQuickList();
+        else this.closeQuickProjects();
+      }
+      else if (this.aboutOpen()) this.closeAbout();
       else if (this.detailAlbum()) this.closeAlbum();
       else if (this.detailProject()) this.closeProject();
       else this.closeIndex();
@@ -157,7 +179,10 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
     }
     if (event.key !== 'Tab') return;
     const controls = Array.from(dialog.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), summary, [tabindex="0"]'))
-      .filter(control => control.getClientRects().length > 0);
+      .filter(control => {
+        const collapsed = control.closest('details:not([open])');
+        return control.getClientRects().length > 0 && (!collapsed || collapsed.querySelector('summary') === control);
+      });
     const first = controls[0];
     const last = controls[controls.length - 1];
     if (!dialog.contains(document.activeElement)) {
@@ -315,6 +340,63 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
     this.indexTriggerRef.nativeElement.focus({ preventScroll: true });
   }
 
+  openQuickProjects(event: Event): void {
+    this.cancelEntranceWalk();
+    this.musicOpen.set(false);
+    this.quickTrigger = event.currentTarget as HTMLElement;
+    this.quickOpenedWithPointer = event instanceof MouseEvent && event.detail > 0;
+    this.quickTrigger.classList.remove('pointer-focus-return');
+    const story = this.storyRef.nativeElement;
+    this.quickScrollProgress = (window.scrollY - story.offsetTop) / Math.max(story.offsetHeight - window.innerHeight, 1);
+    this.quickSelection.set(null);
+    this.quickListScroll = 0;
+    this.quickProjectsOpen.set(true);
+  }
+
+  closeQuickProjects(): void {
+    this.quickProjectsOpen.set(false);
+    this.changeDetector.detectChanges();
+    const story = this.storyRef.nativeElement;
+    window.scrollTo({ top: story.offsetTop + this.quickScrollProgress * Math.max(story.offsetHeight - innerHeight, 1), behavior: 'instant' });
+    this.updateStory();
+    requestAnimationFrame(() => {
+      if (!this.quickProjectsOpen() && this.quickTrigger?.isConnected) {
+        this.quickTrigger.classList.toggle('pointer-focus-return', this.quickOpenedWithPointer);
+        this.quickTrigger.focus({ preventScroll: true });
+      }
+    });
+  }
+
+  visitQuickProject(chapter: number): void {
+    this.quickProjectsOpen.set(false);
+    this.changeDetector.detectChanges();
+    this.scrollToChapter(chapter);
+    this.indexTriggerRef.nativeElement.focus({ preventScroll: true });
+  }
+
+  selectQuickProject(project: ProjectDetail): void {
+    this.quickListScroll = this.quickDialogElement?.querySelector('.quick-list')?.scrollTop ?? 0;
+    this.quickReturnId = project.id;
+    this.quickSelection.set(project);
+    this.changeDetector.detectChanges();
+    requestAnimationFrame(() => {
+      if (this.quickSelection()?.id === project.id) this.quickDialogElement?.querySelector<HTMLElement>('#quick-reading-title')?.focus({ preventScroll: true });
+    });
+  }
+
+  showQuickList(): void {
+    this.quickSelection.set(null);
+    this.changeDetector.detectChanges();
+    const list = this.quickDialogElement?.querySelector<HTMLElement>('.quick-list');
+    if (!list) return;
+    list.scrollTop = this.quickListScroll;
+    requestAnimationFrame(() => {
+      if (!list.isConnected || this.quickSelection()) return;
+      Array.from(list.querySelectorAll<HTMLButtonElement>('[data-quick-project]'))
+        .find(button => button.dataset['quickProject'] === this.quickReturnId)?.focus({ preventScroll: true });
+    });
+  }
+
   openProject(chapter: number, event: Event): void {
     this.cancelEntranceWalk();
     this.musicOpen.set(false);
@@ -353,7 +435,7 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
 
   openAlbum(request: { id: string; event: Event }): void {
     const album = STUDIO_ALL_ALBUMS.find(item => item.id === request.id);
-    if (!album || this.detailProject() || this.indexOpen() || this.aboutOpen()) return;
+    if (!album || this.detailProject() || this.indexOpen() || this.aboutOpen() || this.quickProjectsOpen()) return;
     this.cancelEntranceWalk();
     this.musicOpen.set(false);
     clearTimeout(this.albumRemovalTimer);
@@ -424,7 +506,7 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
     this.entranceFrame = requestAnimationFrame(step);
   }
 
-  private readonly cancelEntranceWalk = (): void => {
+  readonly cancelEntranceWalk = (): void => {
     cancelAnimationFrame(this.entranceFrame);
     this.entranceFrame = 0;
     this.entranceController?.abort();
@@ -471,7 +553,7 @@ export class PortfolioPageComponent implements AfterViewInit, OnDestroy {
 
   private updateStory(): void {
     if (this.aboutOpen()) { this.positionAboutBubble(); return; }
-    if (this.detailProject() || this.detailAlbum()) return;
+    if (this.detailProject() || this.detailAlbum() || this.quickProjectsOpen()) return;
     if (this.indexPreview() !== null && window.innerWidth <= 760) this.indexPreview.set(null);
     const story = this.storyRef.nativeElement;
     const range = Math.max(story.offsetHeight - window.innerHeight, 1);

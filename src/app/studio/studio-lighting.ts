@@ -16,15 +16,6 @@ export function addStudioLighting(scene: THREE.Scene, smallScreen: boolean): voi
     lamp.shadow.normalBias = .008;
     lamp.shadow.radius = 3;
     scene.add(lamp, lamp.target);
-    const right = new THREE.SpotLight(0xffca92, 24, 10, Math.PI * .43, 1, 2);
-    right.position.set(3.58, 1.58, 1.8);
-    right.target.position.set(2.55, .35, -.4);
-    right.castShadow = !smallScreen;
-    right.shadow.mapSize.set(1024, 1024);
-    right.shadow.normalBias = .01;
-    right.shadow.bias = -.0001;
-    right.shadow.radius = 3;
-    scene.add(right, right.target);
     const ceilingBounce = new THREE.RectAreaLight(0xffdfbc, .75, 4, 2.4);
     ceilingBounce.position.set(-1.25, 3.32, -.5);
     ceilingBounce.lookAt(-1.25, .6, -1.8);
@@ -63,8 +54,9 @@ export function addStudioContactShadows(scene: THREE.Scene): THREE.Texture {
     const map = new THREE.CanvasTexture(canvas);
     for (const [x, z, w, d] of [
         [-1.75, -2.8, 4.8, 2], [1.05, -2.8, 1.6, 1.3], [-3.45, .2, 1.5, 2.5],
-        [2.75, -.75, 2.2, 1.8], [2.9, 2.05, 2.5, 2.2],
-        [2.55, -3.60, 1.8, .90], [3.78, -.82, .54, .70], [-3.85, 1.60, .60, .80], [3.77, 2.98, .78, .72],
+        [2.75, -.75, 2.2, 1.8],
+        [2.78, 2.10, 1.6, 2.5],
+        [2.55, -3.60, 1.8, .90], [3.78, -.82, .54, .70], [-3.85, 1.60, .60, .80],
     ]) {
         const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, opacity: .75 }));
         mesh.rotation.x = -Math.PI / 2;

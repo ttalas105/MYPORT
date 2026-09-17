@@ -9,12 +9,14 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from './studio-geometry';
 import type { StudioMaterials } from './studio-furniture';
 import { STUDIO_WALL_ALBUMS } from './studio-albums';
-import { buildAboutNeon } from './studio-neon';
+import { buildAboutNeon, buildProjectViewNeon } from './studio-neon';
 import { buildStudioExterior } from './studio-exterior';
 export interface StudioArchitecture {
     group: THREE.Group;
     door: THREE.Group;
     aboutSign: THREE.Object3D;
+    projectViewSign: THREE.Object3D;
+    animateProjectView(progress: number): void;
     animateActivation(progress: number): void;
     albumArt: Record<string, THREE.Mesh>;
     resources: THREE.Texture[];
@@ -49,8 +51,9 @@ export function buildStudioRoom(m: StudioMaterials, plaster: THREE.Material, tex
     box(5.3, 2.2, .09, ink, -1.35, 1.95, -4.04);
     for (let i = 0; i < 42; i++)
         box(.055, 2.18, .09, m.walnut, -3.9 + i * .125, 1.95, -3.955, .004);
+    // Center the three panels on the acoustic backing with equal gaps.
     for (let i = 0; i < 3; i++) {
-        box(.72, 1.38, .14, m.fabric, -2.92 + i * 1.14, 2.11, -3.82, .035);
+        box(.72, 1.38, .14, m.fabric, -1.35 + (i - 1) * 1.14, 2.11, -3.82, .035);
     }
     // Ceiling cloud is a physical upholstered object, not a glowing rectangle.
     box(3.7, .11, 1.8, m.fabric, -1.25, 3.13, -1.6, .045);
@@ -144,9 +147,13 @@ export function buildStudioRoom(m: StudioMaterials, plaster: THREE.Material, tex
         side: THREE.DoubleSide,
     });
     const hem = new THREE.MeshStandardMaterial({ color: 0x746a5c, roughness: 1, side: THREE.DoubleSide });
+    // Keep the header above the window frame while the lower hem stays near the floor.
+    const curtainRodHeight = 3.12;
+    const curtainBottom = .33;
+    const curtainTop = curtainRodHeight - .04;
     const clothPoint = (u: number, v: number, z: number, offset = 0) => new THREE.Vector3(
         4.075 + (.050 + .011 * (1 - v)) * Math.cos(u * Math.PI * 10) + .003 * Math.sin(v * 8 + u * 5) * (1 - v) + offset,
-        .33 + v * 2.38 + .004 * (1 - v) * (1 + Math.cos(u * Math.PI * 10)) / 2,
+        curtainBottom + v * (curtainTop - curtainBottom) + .004 * (1 - v) * (1 + Math.cos(u * Math.PI * 10)) / 2,
         z - .047 + u * .422,
     );
     const clothPatch = (z: number, u0: number, u1: number, v0: number, v1: number, segmentsU: number, segmentsV: number, material: THREE.Material, offset = 0) => {
@@ -175,22 +182,22 @@ export function buildStudioRoom(m: StudioMaterials, plaster: THREE.Material, tex
         clothPatch(z, .988, .998, 0, 1, 1, 12, hem, -.0015);
         for (let i = 0; i <= 5; i++) {
             const ring = new THREE.Mesh(new THREE.TorusGeometry(.019, .0025, 4, 12), m.brass);
-            ring.position.set(4.125, 2.75, z - .047 + i * .422 / 5);
+            ring.position.set(4.125, curtainRodHeight, z - .047 + i * .422 / 5);
             group.add(ring);
             const tab = new THREE.Mesh(new THREE.BoxGeometry(.006, .032, .011), hem);
-            tab.position.set(4.125, 2.718, ring.position.z);
+            tab.position.set(4.125, curtainRodHeight - .032, ring.position.z);
             group.add(tab);
         }
     });
     const curtainRod = new THREE.Mesh(new THREE.CylinderGeometry(.010, .010, 3.40, 20), m.brass);
     curtainRod.name = 'Curtain rod';
     curtainRod.rotation.x = Math.PI / 2;
-    curtainRod.position.set(4.125, 2.75, -1.136);
+    curtainRod.position.set(4.125, curtainRodHeight, -1.136);
     group.add(curtainRod);
     for (const z of [-2.80, .529]) {
         const bracket = new THREE.Mesh(new THREE.CylinderGeometry(.007, .007, .245, 12), m.brass);
         bracket.rotation.z = Math.PI / 2;
-        bracket.position.set(4.245, 2.75, z);
+        bracket.position.set(4.245, curtainRodHeight, z);
         group.add(bracket);
     }
     // Real framed album artwork above the listening station.
@@ -285,6 +292,8 @@ export function buildStudioRoom(m: StudioMaterials, plaster: THREE.Material, tex
     door.add(sign);
     const aboutNeon = buildAboutNeon(m);
     group.add(aboutNeon.group);
+    const projectNeon = buildProjectViewNeon(m);
+    group.add(projectNeon.group);
     const exterior = buildStudioExterior(m);
     group.add(exterior.group);
     resources.push(...exterior.resources);
@@ -345,7 +354,6 @@ export function buildStudioRoom(m: StudioMaterials, plaster: THREE.Material, tex
         light.position.set(x, height - .16, z);
         group.add(light);
     };
-    lamp(3.58, 1.8, 1.78);
     lamp(-3.92, -3.4, 1.95);
     // One restrained wall wash, tucked behind the workstation.
     box(4.9, .012, .013, new THREE.MeshBasicMaterial({ color: 0x9c83c3 }), -1.25, 1.12, -3.9, .002);
@@ -367,5 +375,6 @@ export function buildStudioRoom(m: StudioMaterials, plaster: THREE.Material, tex
         leaf.castShadow = true;
         group.add(leaf);
     }
-    return { group, door, aboutSign: aboutNeon.aboutSign, animateActivation: aboutNeon.animateActivation, albumArt, resources };
+    return { group, door, aboutSign: aboutNeon.sign, animateActivation: aboutNeon.animateActivation,
+        projectViewSign: projectNeon.sign, animateProjectView: projectNeon.animateActivation, albumArt, resources };
 }

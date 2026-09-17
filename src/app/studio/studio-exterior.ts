@@ -46,7 +46,7 @@ export function buildStudioExterior(m: StudioMaterials): { group: THREE.Group; r
   // The frame sits against the plaster; four brass spacers support the exposed board.
   const keyboardDisplay = new THREE.Group();
   keyboardDisplay.name = 'Framed mechanical keyboard';
-  keyboardDisplay.position.set(-1.65, 1.98, 4.34);
+  keyboardDisplay.position.set(-1.65, .995, 4.34);
   group.add(keyboardDisplay);
   box(keyboardDisplay, [1.10, .89, .03], [0, 0, -.03], m.walnut, .009);
   box(keyboardDisplay, [1.012, .802, .012], [0, 0, -.006], m.fabric, .004);

@@ -5,6 +5,11 @@ import { buildStudioRoom } from './studio/studio-room';
 import { buildStudioWorkDetails } from './studio/studio-work-details';
 import { buildStudioMusicCorner } from './studio/studio-music-corner';
 import { buildStudioGamingDetails } from './studio/studio-gaming-details';
+import { buildStudioClock } from './studio/studio-clock';
+import { buildStudioTelevision } from './studio/studio-television';
+import { StudioTvPlayer } from './studio/studio-tv-player';
+import { buildStudioTvLounge } from './studio/studio-tv-lounge';
+import { buildStudioRanks, STUDIO_RANKS, STUDIO_RANKS_TITLE } from './studio/studio-ranks';
 import { buildStudioCity } from './studio/studio-city';
 import { buildStudioStreet } from './studio/studio-street';
 import { STUDIO_CITY_APPROACH, STUDIO_LOOK_AROUND, STUDIO_STOPS, studioCaptionAt, studioProgressFromScroll } from './studio/studio-route';
@@ -19,6 +24,7 @@ import { StudioRendering } from './studio/studio-rendering';
 import { StudioPerformance } from './studio/studio-performance';
 import { batchStaticStudio, freezeStudioTransforms } from './studio/studio-batching';
 import { StudioFrameBudget } from './studio/studio-quality';
+import { StudioLookControls } from './studio/studio-look-controls';
 import { PROJECT_DETAILS } from './project-details';
 interface CameraKey {
     t: number;
@@ -31,9 +37,13 @@ interface CameraKey {
     selector: 'app-system-scene',
     standalone: true,
     template: `<canvas #canvas aria-hidden="true"></canvas>
+      <p class="scene-description">{{ ranksDescription }}</p>
       <button #aboutTrigger class="scene-about-trigger" type="button" hidden
         aria-label="CLICK ME — About Thomas" aria-haspopup="dialog" aria-controls="studio-about"
         (click)="activateAbout($event)"></button>
+      <button #projectViewTrigger class="scene-about-trigger scene-project-view-trigger" type="button" hidden
+        aria-label="PROJECT VIEW — Quick project view" aria-haspopup="dialog" aria-controls="quick-projects"
+        (click)="activateProjectView($event)"></button>
       @for (album of albums; track album.id) {
         <button #albumTrigger class="scene-object-trigger scene-album-trigger" type="button" hidden disabled
           [attr.data-album-id]="album.id" [attr.aria-label]="'Explore ' + album.title + ' by ' + album.artist"
@@ -51,9 +61,13 @@ interface CameraKey {
         </button>
       }`,
     styles: [`:host{position:absolute;inset:0;display:block;overflow:hidden;background:#171512}
-      canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+      canvas{display:block;width:100%;height:100%;touch-action:pan-y pinch-zoom;cursor:grab}
+      :host{user-select:none;touch-action:pan-y pinch-zoom}
+      .scene-description{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+      :host(.is-looking),:host(.is-looking) canvas,:host(.is-looking) button{cursor:grabbing}
       .scene-about-trigger{position:absolute;min-width:44px;min-height:44px;touch-action:pan-y;border-radius:4px}
       .scene-about-trigger:focus-visible{outline:2px solid #ffe5d8;outline-offset:6px}
+      .scene-project-view-trigger:focus-visible{outline-color:#d5a7ff}
       .scene-object-trigger{position:absolute;z-index:2;padding:0;border:0;background:transparent;box-shadow:none;cursor:pointer;touch-action:pan-y;border-radius:2px}
       .scene-object-trigger[hidden]{display:none}
       .scene-object-trigger svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;opacity:0;transition:opacity 160ms ease;pointer-events:none}
@@ -69,13 +83,16 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     private readonly canvasRef!: ElementRef<HTMLCanvasElement>;
     @ViewChild('aboutTrigger', { static: true })
     private readonly aboutTriggerRef!: ElementRef<HTMLButtonElement>;
+    @ViewChild('projectViewTrigger', { static: true })
+    private readonly projectViewTriggerRef!: ElementRef<HTMLButtonElement>;
     @ViewChildren('albumTrigger')
     private readonly albumTriggerRefs!: QueryList<ElementRef<HTMLButtonElement>>;
     @ViewChildren('projectTrigger')
     private readonly projectTriggerRefs!: QueryList<ElementRef<HTMLButtonElement>>;
     readonly albums = STUDIO_ALL_ALBUMS;
+    readonly ranksDescription = `${STUDIO_RANKS_TITLE}: ${STUDIO_RANKS.map(entry => `${entry.game}, ${entry.rank}`).join('; ')}.`;
     readonly projectObjects = PROJECT_DETAILS.flatMap(project => [
-        { id: `project-${project.chapter}`, chapter: project.chapter, title: project.title, object: project.chapter === 2 ? 'server rack' : project.chapter === 4 ? 'laptop' : 'monitor' },
+        { id: `project-${project.chapter}`, chapter: project.chapter, title: project.title, object: project.chapter === 2 ? 'server rack' : project.chapter === 4 ? 'laptop' : project.chapter === 5 ? 'wall clock' : 'monitor' },
         ...(project.chapter === 4 ? [{ id: 'project-4-evidence', chapter: 4, title: project.title, object: 'sources monitor' }] : []),
     ]);
     private projectTargets: Record<string, StudioProjectTarget> = {};
@@ -87,7 +104,11 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     @Output()
     readonly aboutRequested = new EventEmitter<Event>();
     @Output()
+    readonly projectViewRequested = new EventEmitter<Event>();
+    @Output()
     readonly sceneReady = new EventEmitter<void>();
+    @Output()
+    readonly lookStarted = new EventEmitter<void>();
     @Output()
     readonly sceneUnavailable = new EventEmitter<void>();
     @Output()
@@ -106,6 +127,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         const previous = this.selectedAlbum;
         this.selectedAlbum = next;
         this.albumFocusTarget = next ? 1 : 0;
+        if (next) this.lookControls?.cancel();
         if (next) this.directViewPending = true;
         if (next) {
             if (!previous) {
@@ -126,6 +148,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     }
     @Input() set albumInteractionsBlocked(blocked: boolean) {
         this.albumBlocked = blocked;
+        if (blocked) this.lookControls?.cancel();
         if (blocked) this.albumRestorePending = false;
         this.zone.runOutsideAngular(() => this.requestFrame());
     }
@@ -147,6 +170,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     private albumVisibility?: StudioAlbumOcclusion;
     private readonly albumRayDirection = new THREE.Vector3();
     private readonly albumCorners = Array.from({ length: 4 }, () => new THREE.Vector3());
+    private readonly clockCorners = Array.from({ length: 32 }, () => new THREE.Vector3());
     private readonly albumOcclusion = new Map<string, boolean>();
     private albumOcclusionTime = -Infinity;
     private albumOcclusionDirty = true;
@@ -160,6 +184,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     @Input() set focusChapter(chapter: number | null) {
         if (chapter === null && this.focusTarget && this.projectReturnId) this.projectRestorePending = true;
         this.focusTarget = chapter === null ? 0 : 1;
+        if (chapter !== null) this.lookControls?.cancel();
         if (chapter !== null) {
             this.detailChapter = chapter;
             if (this.focusAmount < .001 || this.motion.matches) {
@@ -204,17 +229,25 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     private readonly roomFogColor = new THREE.Color(0x171512);
     private readonly cityFogColor = new THREE.Color(0x10182a);
     private camera?: THREE.PerspectiveCamera;
+    private lookControls?: StudioLookControls;
+    private readonly lookDirection = new THREE.Vector3();
     private door?: THREE.Group;
     private aboutSign?: THREE.Object3D;
     private animateAbout?: (progress: number) => void;
     private aboutAnimationProgress = 1;
     private aboutAnimationStarted = 0;
+    private projectViewSign?: THREE.Object3D;
+    private animateProjectView?: (progress: number) => void;
+    private projectViewAnimationProgress = 1;
+    private projectViewAnimationStarted = 0;
     private readonly aboutBounds = new THREE.Box3();
     private readonly aboutCorners = Array.from({ length: 4 }, () => new THREE.Vector3());
     private record?: THREE.Group;
+    private updateClock?: (time: number) => void;
     private meters: THREE.Mesh[] = [];
     private video?: HTMLVideoElement;
     private videoTexture?: THREE.VideoTexture;
+    private tvPlayer?: StudioTvPlayer;
     private reflectiveMaterials: THREE.MeshStandardMaterial[] = [];
     private resources: THREE.Texture[] = [];
     private frame = 0;
@@ -233,6 +266,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         2: { position: new THREE.Vector3(.80, 1.12, -1.10), target: new THREE.Vector3(1.025, .90, -2.53), fov: 43 },
         3: { position: new THREE.Vector3(-.75, 1.4, -1), target: new THREE.Vector3(-1.05, 1.282, -2.894), fov: 47 },
         4: { position: new THREE.Vector3(2.24, 1.55, .75), target: new THREE.Vector3(2.77, 1.17, -.94), fov: 49 },
+        5: { position: new THREE.Vector3(-2.38, 2.12, -2.25), target: new THREE.Vector3(-4.18, 2.25, -2.25), fov: 43 },
     };
     private readonly detailPosition = this.detailViews[1].position.clone();
     private readonly detailTarget = this.detailViews[1].target.clone();
@@ -255,6 +289,8 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         { t: .70, position: new THREE.Vector3(.1, 1.44, -.28), target: new THREE.Vector3(-.62, 1.15, -2.83), fov: 44 },
         { t: .80, position: new THREE.Vector3(1.15, 1.58, 1.20), target: new THREE.Vector3(2.40, 1.04, -.88), fov: 49 },
         { t: .87, position: new THREE.Vector3(1.15, 1.58, 1.20), target: new THREE.Vector3(2.40, 1.04, -.88), fov: 49 },
+        { t: .93, position: new THREE.Vector3(-1.5, 1.85, -2.60), target: new THREE.Vector3(-4.18, 2.14, -2.72), fov: 49 },
+        { t: .955, position: new THREE.Vector3(-1.5, 1.85, -2.60), target: new THREE.Vector3(-4.18, 2.14, -2.72), fov: 49 },
         { t: 1, position: new THREE.Vector3(.1, 1.73, 2.85), target: new THREE.Vector3(-.6, 1.24, -1.6), fov: 61 },
     ];
     constructor(private readonly zone: NgZone) { }
@@ -284,6 +320,13 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         this.animateAbout?.(this.aboutAnimationProgress);
         this.zone.runOutsideAngular(() => this.requestFrame());
         this.aboutRequested.emit(event);
+    }
+    activateProjectView(event: Event): void {
+        this.projectViewAnimationProgress = this.motion.matches ? 1 : 0;
+        this.projectViewAnimationStarted = performance.now();
+        this.animateProjectView?.(this.projectViewAnimationProgress);
+        this.zone.runOutsideAngular(() => this.requestFrame());
+        this.projectViewRequested.emit(event);
     }
     ngAfterViewInit(): void { this.zone.runOutsideAngular(() => this.initialize()); }
     private initialize(): void {
@@ -359,16 +402,22 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         const workDetails = buildStudioWorkDetails(materials);
         const musicCorner = buildStudioMusicCorner(materials);
         const gamingDetails = buildStudioGamingDetails(materials);
+        const clock = buildStudioClock(materials, () => this.requestFrame());
+        const television = buildStudioTelevision(materials);
+        const tvLounge = buildStudioTvLounge(materials);
+        this.updateClock = clock.update;
+        const ranks = buildStudioRanks(texture, () => this.requestFrame());
+        musicCorner.rankMount.add(ranks.group);
         const city = buildStudioCity(materials);
         const street = buildStudioStreet(materials);
         this.exterior = new THREE.Group();
         this.exterior.name = 'Exterior city approach';
         this.exterior.add(city.group, street.group);
-        const detailResources = [...workDetails.resources, ...musicCorner.resources, ...gamingDetails.resources, ...city.resources, ...street.resources];
-        this.readerAnchors = furniture.readerAnchors;
-        this.projectTargets = furniture.projectTargets;
+        const detailResources = [...workDetails.resources, ...musicCorner.resources, ...gamingDetails.resources, ...clock.resources, ...ranks.resources, ...city.resources, ...street.resources, ...tvLounge.resources];
+        this.readerAnchors = { ...furniture.readerAnchors, 5: clock.readerAnchors };
+        this.projectTargets = { ...furniture.projectTargets, 'project-5': clock.projectTarget };
         this.albumArt = { ...room.albumArt, ...furniture.albumArt };
-        this.scene.add(room.group, furniture.group, workDetails.group, musicCorner.group, gamingDetails.group, this.exterior);
+        this.scene.add(room.group, furniture.group, workDetails.group, musicCorner.group, gamingDetails.group, clock.group, television.group, tvLounge.group, this.exterior);
         const floor = room.group.getObjectByName('Studio floor');
         if (floor instanceof THREE.Mesh) floor.material = floorMaterial;
         else floorMaterial.dispose();
@@ -379,12 +428,13 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             [materials.fabric, { metres: .265 }],
             [plaster, { metres: 2.23 }],
         ]));
-        const movingRoots = new Set<THREE.Object3D>([room.door, furniture.record, room.aboutSign.parent!]);
+        const movingRoots = new Set<THREE.Object3D>([room.door, furniture.record, room.aboutSign.parent!, room.projectViewSign.parent!, ...clock.movingRoots]);
         const keep = new Set<THREE.Object3D>([
             ...movingRoots, ...furniture.meters, furniture.portalScreen, furniture.stanleyScreen, ...Object.values(this.albumArt), ...Object.values(this.projectTargets).map(target => target.probe),
         ]);
         batchStaticStudio(room.group, keep);
         batchStaticStudio(furniture.group, keep);
+        batchStaticStudio(clock.group, keep);
         this.reflectiveMaterials = [materials.wood, materials.walnut, materials.metal, materials.brass];
         if (floor instanceof THREE.Mesh) this.reflectiveMaterials.push(floorMaterial);
         this.scene.traverse(object => {
@@ -399,11 +449,15 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         this.door = room.door;
         this.aboutSign = room.aboutSign;
         this.animateAbout = room.animateActivation;
+        this.projectViewSign = room.projectViewSign;
+        this.animateProjectView = room.animateProjectView;
         this.record = furniture.record;
         this.albumVisibility = new StudioAlbumOcclusion(
-            [room.group, furniture.group, workDetails.group, musicCorner.group, gamingDetails.group],
-            [room.door, furniture.record],
+            [room.group, furniture.group, workDetails.group, musicCorner.group, gamingDetails.group, clock.group, television.group, tvLounge.group],
+            [room.door, furniture.record, ...clock.movingRoots],
         );
+        this.tvPlayer = new StudioTvPlayer(this.canvasRef.nativeElement.parentElement!, television.screen,
+            this.albumVisibility, () => this.requestFrame(), tvLounge.group, tvLounge.silhouettes);
         this.meters = furniture.meters;
         this.resources.push(...room.resources, ...furniture.resources, ...detailResources);
         for (const map of [...room.resources, ...furniture.resources, ...detailResources]) map.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8);
@@ -443,6 +497,11 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         document.addEventListener('visibilitychange', this.onVisibility);
         this.motion.addEventListener('change', this.onMotionChange);
         this.canvasRef.nativeElement.addEventListener('webglcontextlost', this.onContextLost);
+        this.lookControls = new StudioLookControls(this.canvasRef.nativeElement.parentElement!,
+            () => !this.disposed && !this.hidden && !this.albumBlocked && !this.selectedAlbum &&
+                !this.focusTarget && this.focusAmount < .001 && this.albumFocusAmount < .001,
+            () => this.requestFrame(),
+            () => this.zone.run(() => this.lookStarted.emit()));
         this.resize();
         this.onScroll();
         this.progress = this.targetProgress;
@@ -473,6 +532,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             });
         }
         this.rendering?.resize(width, height, this.smallScreen, this.camera);
+        this.tvPlayer?.resize(width, height);
         this.onScroll();
         this.requestFrame();
     };
@@ -480,17 +540,23 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         const story = document.querySelector<HTMLElement>('.world-story');
         if (!story)
             return;
-        this.targetProgress = studioProgressFromScroll((window.scrollY - story.offsetTop) / Math.max(story.offsetHeight - innerHeight, 1));
+        const next = studioProgressFromScroll((window.scrollY - story.offsetTop) / Math.max(story.offsetHeight - innerHeight, 1));
+        if (Math.abs(next - this.targetProgress) > .000001) this.lookControls?.recenter();
+        this.targetProgress = next;
         this.requestFrame();
     };
     private readonly onVisibility = (): void => {
         this.hidden = document.hidden;
         if (this.hidden) {
+            this.lookControls?.cancel();
             cancelAnimationFrame(this.frame);
             this.frame = 0;
             this.video?.pause();
+            this.tvPlayer?.suspend();
             this.aboutAnimationProgress = 1;
             this.animateAbout?.(1);
+            this.projectViewAnimationProgress = 1;
+            this.animateProjectView?.(1);
         }
         else {
             this.previousTime = performance.now();
@@ -501,21 +567,27 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     private readonly onMotionChange = (): void => { this.updateVideo(); this.requestFrame(); };
     private readonly onContextLost = (event: Event): void => {
         event.preventDefault();
+        this.lookControls?.dispose();
         cancelAnimationFrame(this.frame);
         this.video?.pause();
+        this.tvPlayer?.suspend();
         this.aboutTriggerRef.nativeElement.hidden = true;
+        this.projectViewTriggerRef.nativeElement.hidden = true;
         this.hideObjectTriggers();
         this.zone.run(() => this.sceneUnavailable.emit());
     };
     /** A native button follows the sign's projection for mouse, touch and keyboard. */
     private updateAboutTrigger(): void {
-        const button = this.aboutTriggerRef.nativeElement;
-        if (!this.camera || !this.aboutSign || this.progress >= .07 || this.targetProgress >= .10 || this.focusTarget > 0 || this.albumFocusAmount > .001) {
+        this.updateNeonTrigger(this.aboutTriggerRef.nativeElement, this.aboutSign);
+        this.updateNeonTrigger(this.projectViewTriggerRef.nativeElement, this.projectViewSign);
+    }
+    private updateNeonTrigger(button: HTMLButtonElement, sign?: THREE.Object3D): void {
+        if (!this.camera || !sign || this.progress >= .07 || this.targetProgress >= .10 || this.focusTarget > 0 || this.albumFocusAmount > .001) {
             button.hidden = true;
             return;
         }
         this.camera.updateMatrixWorld();
-        this.aboutBounds.setFromObject(this.aboutSign);
+        this.aboutBounds.setFromObject(sign);
         const { min, max } = this.aboutBounds;
         this.aboutCorners[0].set(min.x, min.y, max.z);
         this.aboutCorners[1].set(min.x, max.y, max.z);
@@ -600,16 +672,17 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             if (!visible || !view) { button.hidden = true; button.disabled = true; continue; }
             this.albumRayDirection.subVectors(this.camera.position, view.target).normalize();
             if (view.normal.dot(this.albumRayDirection) < .18) { button.hidden = true; button.disabled = true; continue; }
-            view.anchors.forEach((point, index) => this.albumCorners[index].copy(point).project(this.camera!));
-            const left = (Math.min(...this.albumCorners.map(point => point.x)) + 1) * width / 2;
-            const right = (Math.max(...this.albumCorners.map(point => point.x)) + 1) * width / 2;
-            const top = (1 - Math.max(...this.albumCorners.map(point => point.y))) * height / 2;
-            const bottom = (1 - Math.min(...this.albumCorners.map(point => point.y))) * height / 2;
+            const corners = view.anchors.length === 32 ? this.clockCorners : this.albumCorners;
+            view.anchors.forEach((point, index) => corners[index].copy(point).project(this.camera!));
+            const left = (Math.min(...corners.map(point => point.x)) + 1) * width / 2;
+            const right = (Math.max(...corners.map(point => point.x)) + 1) * width / 2;
+            const top = (1 - Math.max(...corners.map(point => point.y))) * height / 2;
+            const bottom = (1 - Math.min(...corners.map(point => point.y))) * height / 2;
             // A partially visible sleeve is still a useful target on a phone.
             // The host clips the projected polygon at the viewport edge.
             const visibleWidth = Math.min(right, width - 4) - Math.max(left, 4);
             const visibleHeight = Math.min(bottom, height - 4) - Math.max(top, 4);
-            visible = this.albumCorners.every(point => point.z > -1 && point.z < 1) && Math.min(visibleWidth, visibleHeight) >= 24;
+            visible = corners.every(point => point.z > -1 && point.z < 1) && Math.min(visibleWidth, visibleHeight) >= 24;
             if (visible) {
                 if (refreshOcclusion || !this.albumOcclusion.has(id)) this.albumOcclusion.set(id, this.albumVisibility?.isUnoccluded(art, view.target, this.camera.position) ?? false);
                 visible = this.albumOcclusion.get(id) === true;
@@ -621,8 +694,8 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             button.style.top = `${top}px`;
             button.style.width = `${right - left}px`;
             button.style.height = `${bottom - top}px`;
-            const polygon = [0, 2, 3, 1].map(index => {
-                const point = this.albumCorners[index];
+            const outline = corners.length === 4 ? [corners[0], corners[2], corners[3], corners[1]] : corners;
+            const polygon = outline.map(point => {
                 return [(((point.x + 1) * width / 2) - left) / (right - left) * 100,
                     (((1 - point.y) * height / 2) - top) / (bottom - top) * 100];
             });
@@ -700,9 +773,9 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
                 this.albumFov = album.fov;
             }
         }
-        const moving = Math.abs(this.progress - this.targetProgress) > .00001 && this.albumRouteProgress === null ||
+        const moving = !!this.lookControls?.moving || Math.abs(this.progress - this.targetProgress) > .00001 && this.albumRouteProgress === null ||
             Math.abs(this.focusAmount - this.focusTarget) > .0001 ||
-            Math.abs(this.albumFocusAmount - this.albumFocusTarget) > .0001 || this.aboutAnimationProgress < 1 ||
+            Math.abs(this.albumFocusAmount - this.albumFocusTarget) > .0001 || this.aboutAnimationProgress < 1 || this.projectViewAnimationProgress < 1 ||
             this.focusTarget > 0 && (this.detailPosition.distanceToSquared(detail.position) > 1e-8 ||
                 this.detailTarget.distanceToSquared(detail.target) > 1e-8 ||
                 Math.abs(this.readerOffset - this.readerOffsetTarget) > .0001 || Math.abs(this.readerFraming - this.readerFramingTarget) > .0001) ||
@@ -713,12 +786,17 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         if (!this.benchmark) this.rendering?.adapt(now - this.previousTime, moving && this.movingLastFrame, now, this.camera);
         this.movingLastFrame = moving;
         const dt = Math.min((now - this.previousTime) / 1000, .05);
+        this.lookControls?.update(dt, this.motion.matches);
         this.previousTime = now;
         if (!this.motion.matches)
             this.elapsed += dt;
         if (this.aboutAnimationProgress < 1) {
             this.aboutAnimationProgress = this.motion.matches ? 1 : THREE.MathUtils.clamp((now - this.aboutAnimationStarted) / 950, 0, 1);
             this.animateAbout?.(this.aboutAnimationProgress);
+        }
+        if (this.projectViewAnimationProgress < 1) {
+            this.projectViewAnimationProgress = this.motion.matches ? 1 : THREE.MathUtils.clamp((now - this.projectViewAnimationStarted) / 950, 0, 1);
+            this.animateProjectView?.(this.projectViewAnimationProgress);
         }
         if (this.albumRouteProgress !== null) {
             this.progress = this.albumRouteProgress;
@@ -763,9 +841,24 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
             target.x += 1.1 * entranceFraming;
             const lookAroundFraming = THREE.MathUtils.smoothstep(p, .16, .19) * (1 - THREE.MathUtils.smoothstep(p, .265, .30));
             const rackFraming = THREE.MathUtils.smoothstep(p, .35, .45) * (1 - THREE.MathUtils.smoothstep(p, .56, .64));
-            const tapiFraming = THREE.MathUtils.smoothstep(p, .70, .80) * (1 - THREE.MathUtils.smoothstep(p, .87, 1));
+            const tapiFraming = THREE.MathUtils.smoothstep(p, .70, .80) * (1 - THREE.MathUtils.smoothstep(p, .87, .93));
+            const clockFraming = THREE.MathUtils.smoothstep(p, .87, .93) * (1 - THREE.MathUtils.smoothstep(p, .955, 1));
             target.x += .37 * tapiFraming;
-            target.y += .32 * (1 - lookAroundFraming) - .52 * rackFraming - .22 * tapiFraming - .4 * entranceFraming;
+            target.z += .47 * clockFraming;
+            target.y += .32 * (1 - lookAroundFraming) - .52 * rackFraming - .22 * tapiFraming - .4 * entranceFraming - .36 * clockFraming;
+        }
+        // Outside, keep the gaze within the forward 90 degrees. Crossing the
+        // doorway restores a full turn; returning outside clamps any held view.
+        this.lookControls?.setYawLimit(position.z > 3.5 ? Math.PI / 4 : Infinity);
+        // Rotate the route's gaze at a fixed position. Readers still frame their
+        // objects normally, and closing them restores the visitor's chosen view.
+        if (this.lookControls && (this.lookControls.yaw || this.lookControls.pitch)) {
+            const direction = this.lookDirection.subVectors(target, position);
+            const distance = direction.length();
+            const yaw = Math.atan2(direction.x, -direction.z) + this.lookControls.yaw;
+            const pitch = THREE.MathUtils.clamp(Math.asin(direction.y / distance) + this.lookControls.pitch, -1.4, 1.4);
+            direction.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+            target.copy(position).addScaledVector(direction, distance);
         }
         this.focusAmount = this.motion.matches ? this.focusTarget : THREE.MathUtils.damp(this.focusAmount, this.focusTarget, 5.5, dt);
         // Reader placement is separate from the Index's always-right drawer.
@@ -798,8 +891,9 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         fog.near = THREE.MathUtils.lerp(13, 32, outside);
         fog.far = THREE.MathUtils.lerp(28, 130, outside);
         (this.scene.background as THREE.Color).copy(fog.color);
-        // The closed room occludes the neighborhood, so skip its draw calls inside.
-        if (this.exterior) this.exterior.visible = position.z > 3.5;
+        // Keep the neighborhood available when looking back through the door.
+        // The guided interior route can still skip these draw calls entirely.
+        if (this.exterior) this.exterior.visible = position.z > 3.5 || !!(this.lookControls?.yaw || this.lookControls?.pitch);
         const openness = studioOpenness(position.z);
         if (Math.abs(openness - this.lastOpenness) > .015 || ((openness === 0 || openness === 1) && openness !== this.lastOpenness)) {
             this.lastOpenness = openness;
@@ -809,13 +903,15 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         const overviewFov = THREE.MathUtils.lerp(a.fov, b.fov, s) + (this.smallScreen ? 16 : 0);
         const fittedFov = this.readerLayouts[this.detailChapter]?.fov ?? this.detailFov;
         const readerFov = THREE.MathUtils.lerp(this.detailFov, Math.max(this.detailFov, fittedFov), this.smallScreen ? 0 : this.readerFraming);
-        this.camera.fov = THREE.MathUtils.lerp(overviewFov, readerFov + (this.smallScreen ? 24 : 0), this.focusAmount);
+        const mobileReaderFov = this.detailChapter === 5 ? 32 : 24;
+        this.camera.fov = THREE.MathUtils.lerp(overviewFov, readerFov + (this.smallScreen ? mobileReaderFov : 0), this.focusAmount);
         if (albumView) this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, this.albumFov, this.albumFocusAmount);
         if (this.focusAmount > .001 || this.albumFocusAmount > .001) {
             const width = this.canvasRef.nativeElement.clientWidth, height = this.canvasRef.nativeElement.clientHeight;
             const offsetX = THREE.MathUtils.lerp(this.smallScreen ? 0 : width * this.readerOffset * this.focusAmount,
                 width * (albumView?.offsetX ?? 0), this.albumFocusAmount);
-            const offsetY = THREE.MathUtils.lerp(this.smallScreen ? height * .29 * this.focusAmount : 0,
+            const mobileReaderOffset = this.detailChapter === 5 ? .32 : .29;
+            const offsetY = THREE.MathUtils.lerp(this.smallScreen ? height * mobileReaderOffset * this.focusAmount : 0,
                 height * (albumView?.offsetY ?? 0), this.albumFocusAmount);
             this.camera.setViewOffset(width, height, offsetX, offsetY, width, height);
         } else this.camera.clearViewOffset();
@@ -830,6 +926,7 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         if (!this.albumFocusTarget && this.albumFocusAmount < .001) this.albumRouteProgress = null;
         if (this.record)
             this.record.rotation.y = this.elapsed * .68;
+        if (!this.motion.matches) this.updateClock?.(Date.now());
         this.meters.forEach((meter, index) => {
             const material = meter.material as THREE.MeshStandardMaterial;
             if ('emissiveIntensity' in material)
@@ -837,6 +934,9 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
         });
         this.updateVideo();
         this.rendering?.render(this.scene, this.camera, this.smallScreen, dt);
+        this.tvPlayer?.update(this.camera, now,
+            this.hidden || p < .15 || this.albumBlocked || !!this.focusTarget || !!this.albumFocusTarget ||
+            this.focusAmount > .012 || this.albumFocusAmount > .012 || !!this.canvasRef.nativeElement.closest('[inert]'));
         this.performanceLog?.record(now, performance.now() - frameStarted, this.renderer, this.progress, this.rendering!.quality.level);
         // Exterior has no perpetual animation. Inside, the platter and meters run at 30 fps when settled.
         if (!this.motion.matches && (this.benchmark || moving || p > .14))
@@ -845,8 +945,10 @@ export class SystemSceneComponent implements AfterViewInit, OnDestroy {
     };
     ngOnDestroy(): void {
         this.disposed = true;
+        this.tvPlayer?.dispose();
         cancelAnimationFrame(this.frame);
         this.resizeObserver?.disconnect();
+        this.lookControls?.dispose();
         window.removeEventListener('scroll', this.onScroll);
         document.removeEventListener('visibilitychange', this.onVisibility);
         this.motion.removeEventListener('change', this.onMotionChange);

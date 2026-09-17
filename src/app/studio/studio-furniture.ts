@@ -45,13 +45,11 @@ export function buildStudioFurniture(
   const charcoal = new THREE.MeshStandardMaterial({ color: '#242528', roughness: 0.67, metalness: 0.12 });
   const keyMaterial = new THREE.MeshStandardMaterial({ color: '#a9a497', roughness: 0.78 });
   const darkKey = new THREE.MeshStandardMaterial({ color: '#444747', roughness: 0.8 });
-  const leather = new THREE.MeshPhysicalMaterial({ color: '#715344', roughness: 0.73, sheen: 0.16, sheenRoughness: 0.8, sheenColor: '#967864' });
   const paleMetal = new THREE.MeshStandardMaterial({ color: '#929598', roughness: 0.36, metalness: 0.86 });
   const ceramic = new THREE.MeshStandardMaterial({ color: '#d1c4a8', roughness: 0.38 });
   const coffee = new THREE.MeshStandardMaterial({ color: '#20130c', roughness: 0.13 });
   const amber = new THREE.MeshStandardMaterial({ color: '#ebac5d', emissive: '#d69b52', emissiveIntensity: 0.4, roughness: 0.4 });
   const cone = new THREE.MeshStandardMaterial({ color: '#242629', roughness: 0.85 });
-  const upholsterySeam = new THREE.MeshStandardMaterial({ color: '#846351', roughness: 0.9 });
   const fabricSeam = new THREE.MeshStandardMaterial({ color: '#484743', roughness: 0.94 });
 
   function worldBoxCorners(object: THREE.Object3D, bounds: THREE.Box3): THREE.Vector3[] {
@@ -255,7 +253,7 @@ export function buildStudioFurniture(
       });
       weltPath = new THREE.CatmullRomCurve3(attached, true, 'centripetal');
     }
-    const welt = new THREE.Mesh(new THREE.TubeGeometry(weltPath, 96, .0018, 4, true), material === leather ? upholsterySeam : fabricSeam);
+    const welt = new THREE.Mesh(new THREE.TubeGeometry(weltPath, 96, .0018, 4, true), fabricSeam);
     welt.receiveShadow = true;
     object.add(welt);
     return object;
@@ -381,10 +379,10 @@ export function buildStudioFurniture(
     });
     context.fillStyle = '#f0e9dd';
     context.font = '600 56px Arial';
-    context.fillText('Stanley for YouTube', 320, 168);
+    context.fillText('LLM Driven Video Generator', 320, 168);
     context.fillStyle = '#aaa1ae';
     context.font = '26px Arial';
-    context.fillText('A little more room for your next idea.', 320, 220);
+    context.fillText('Research, ideas, scripts, and thumbnails.', 320, 220);
     context.strokeStyle = '#3b353f'; context.lineWidth = 2;
     context.strokeRect(320, 268, 1130, 80);
     context.fillStyle = '#908693'; context.font = '25px Arial';
@@ -400,7 +398,7 @@ export function buildStudioFurniture(
       context.strokeStyle = '#716374'; context.strokeRect(1385, y + 32, 22, 22);
     });
     context.fillStyle = '#8c858f'; context.font = '20px Arial';
-    context.fillText('Built independently to get the company’s attention.', 320, 833);
+    context.fillText('Independent project · Built with a teammate.', 320, 833);
   });
 
   function monitor(x: number, map: THREE.Texture, yaw: number, chapter: number): THREE.Mesh {
@@ -915,42 +913,6 @@ export function buildStudioFurniture(
   taskLight.target.position.set(-0.19, 0.832, 0.16);
   tapiStation.add(taskLight, taskLight.target);
   line(tapiStation, [[-0.581, 0.83, -0.304], [-0.591, 0.827, -0.374], [-0.596, 0.77, -0.414], [-0.535, 0.699, -0.29], [-0.25, 0.699, -0.29]], rubber, 0.0025);
-
-  // Tailored leather lounge seating, with crowned cushions and a separate supporting shell.
-  const lounge = new THREE.Group();
-  lounge.name = 'Leather lounge chair';
-  lounge.position.set(2.9, 0, 2.05);
-  lounge.rotation.y = -2.40;
-  group.add(lounge);
-  for (const x of [-0.33, 0.33]) for (const z of [-0.29, 0.29]) {
-    const leg = cylinder(lounge, 0.020, 0.23, x, 0.1166, z, walnut, 16, 0.030);
-    leg.rotation.z = x > 0 ? -0.12 : 0.12;
-  }
-  cushion(lounge, .83, .17, .77, 0, .30, 0, leather, .060, .016);
-  cushion(lounge, .65, .15, .60, 0, .415, .035, leather, .050, .022);
-  for (const x of [-0.377, 0.377]) {
-    cushion(lounge, .155, .29, .72, x, .48, .015, leather, .062, .022);
-  }
-  const loungeBack = cushion(lounge, .76, .54, .15, 0, .60, -.306, leather, .055, .020, 'z');
-  loungeBack.rotation.x = -0.12;
-  const loungePad = cushion(lounge, .59, .41, .13, 0, .62, -.223, leather, .043, .022, 'z');
-  loungePad.rotation.x = -0.16;
-  // Two quiet stitch channels follow the crown, staying on the leather as it reclines.
-  const stitchSurface = new THREE.Mesh(loungePad.geometry, leather);
-  const stitchRay = new THREE.Raycaster();
-  for (const x of [-.14, .14]) {
-    const stitches: number[][] = [];
-    for (let step = 0; step <= 8; step++) {
-      const y = -.125 + step * .03125;
-      stitchRay.set(new THREE.Vector3(x, y, 1), new THREE.Vector3(0, 0, -1));
-      const surface = stitchRay.intersectObject(stitchSurface, false)[0];
-      if (surface) stitches.push([x, y, surface.point.z + .0003]);
-    }
-    line(loungePad, stitches, upholsterySeam, .0011).castShadow = false;
-  }
-  const throwCushion = cushion(lounge, .31, .29, .12, .165, .62, -.069, fabric, .033, .024, 'z', .04);
-  throwCushion.rotation.set(-0.20, 0.10, -0.13);
-  batchAssembly(lounge);
 
   projectTarget('project-4', tapiLaptopDisplay, tapiLidHousing, tapiLidHousing.geometry.boundingBox!);
   projectTarget('project-4-evidence', evidenceDisplay, evidenceHousing, evidenceHousing.geometry.boundingBox!);
